@@ -1,167 +1,24 @@
-let keranjang = [];
-let aktifTokoId = null;
-let aktifTokoWA = "";
-let aktifTokoNama = "";
-
 // --- KONFIGURASI SUPABASE ---
 const { createClient } = supabase;
-
-// URL dasar (tanpa /rest/v1/)
 const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
-
-// Menggunakan publishable/anon key
 const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
-
 const supabaseClient = createClient(supabaseUrl, supabaseKey);
 // ----------------------------
 
-// Buka/Tutup Keranjang
-function toggleCart() {
-    const modal = document.getElementById('cartModal');
-    modal.classList.toggle('hidden');
-}
+// Keranjang belanja dalam bentuk Array
+let keranjang = [];
 
-// Tambah produk ke keranjang
-function tambahKeKeranjang(idProduk, namaProduk, harga, idToko, namaToko, noWA) {
-    // Mencegah campur toko
-    if (keranjang.length > 0 && aktifTokoId !== idToko) {
-        alert(`Gagal! Keranjang Anda masih berisi produk dari ${aktifTokoNama}. Selesaikan pesanan itu dulu atau hapus dari keranjang.`);
-        return; 
-    }
-
-    // Set toko jika keranjang kosong
-    if (keranjang.length === 0) {
-        aktifTokoId = idToko;
-        aktifTokoNama = namaToko;
-        aktifTokoWA = noWA;
-    }
-
-    // Cek produk dobel
-    const produkAda = keranjang.find(item => item.id === idProduk);
-    if (produkAda) {
-        produkAda.qty += 1;
-    } else {
-        keranjang.push({ id: idProduk, nama: namaProduk, harga: harga, qty: 1 });
-    }
-
-    renderKeranjangUI();
-    
-    // Memberi tahu pengguna produk berhasil masuk
-    alert(`${namaProduk} berhasil ditambahkan! Silakan cek ikon keranjang di kanan atas.`);
-}
-
-// Menampilkan isi keranjang di layar
-function renderKeranjangUI() {
-    const cartCount = document.getElementById('cartCount');
-    const cartItems = document.getElementById('cartItems');
-    const cartTotal = document.getElementById('cartTotal');
-    
-    let totalItem = keranjang.reduce((sum, item) => sum + item.qty, 0);
-    cartCount.innerText = totalItem;
-
-    if (keranjang.length === 0) {
-        cartItems.innerHTML = '<p class="text-center text-gray-400 text-sm italic mt-5">Keranjang masih kosong</p>';
-        cartTotal.innerText = 'Rp 0';
-        aktifTokoId = null; 
-        return;
-    }
-
-    let htmlIsi = '';
-    let grandTotal = 0;
-
-    keranjang.forEach((item, index) => {
-        const subTotal = item.harga * item.qty;
-        grandTotal += subTotal;
-        
-        htmlIsi += `
-            <div class="flex justify-between items-center mb-2 text-sm border-b pb-2">
-                <div>
-                    <p class="font-bold">${item.nama}</p>
-                    <p class="text-gray-500">${item.qty} x Rp ${item.harga.toLocaleString('id-ID')}</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="font-bold">Rp ${subTotal.toLocaleString('id-ID')}</span>
-                    <button onclick="hapusItem(${index})" class="text-red-500"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
-    });
-
-    cartItems.innerHTML = htmlIsi;
-    cartTotal.innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
-}
-
-// Hapus item dari keranjang
-function hapusItem(index) {
-    keranjang.splice(index, 1);
-    renderKeranjangUI();
-}
-
-// Tombol hijau "Checkout via WA" diklik
-// Tombol hijau "Checkout via WA" diklik
-async function prosesCheckoutWA() {
-    if (keranjang.length === 0) {
-        alert("Keranjang masih kosong!");
-        return;
-    }
-
-    let grandTotal = 0;
-    let teksPesanan = `Halo *${aktifTokoNama}*, saya ingin memesan:\n\n`;
-
-    keranjang.forEach(item => {
-        const subTotal = item.harga * item.qty;
-        grandTotal += subTotal;
-        teksPesanan += `- ${item.nama} (${item.qty}x) = Rp ${subTotal.toLocaleString('id-ID')}\n`;
-    });
-
-    teksPesanan += `\n*Total Belanja: Rp ${grandTotal.toLocaleString('id-ID')}*\n\n`;
-    teksPesanan += `Mohon info untuk pengiriman dan pembayarannya. (Pesanan via LOKAL SHOP)`;
-
-    const potonganLayanan = grandTotal * 0.01;
-
-    // -- INI ADALAH KODE UNTUK MENGIRIM DATA KE SUPABASE YANG TERLEWAT --
-    try {
-        console.log("Sedang mencatat transaksi ke database...");
-        const { data, error } = await supabaseClient
-            .from('transaksi_log')
-            .insert([
-                { 
-                    total_belanja: grandTotal, 
-                    potongan_layanan: potonganLayanan,
-                    metode_pembayaran: 'WA Direct'
-                }
-            ]);
-
-        if (error) {
-            console.error("Error dari Supabase:", error);
-            // Tetap lanjut ke WA meskipun gagal catat, agar pembeli tidak terhambat
-        } else {
-            console.log("Berhasil mencatat ke Supabase!");
-        }
-    } catch (err) {
-        console.error("Gagal koneksi:", err);
-    }
-    // -------------------------------------------------------------------
-
-    // Buka WhatsApp
-    const urlWA = `https://wa.me/${aktifTokoWA}?text=${encodeURIComponent(teksPesanan)}`;
-    window.open(urlWA, '_blank');
-    
-    // Bersihkan keranjang setelah terkirim
-    keranjang = [];
-    renderKeranjangUI();
-    toggleCart();
-}
-// -- FUNGSI MENARIK DATA PRODUK DARI DATABASE --
+// 1. FUNGSI MENAMPILKAN PRODUK KE BERANDA
 async function tampilkanProduk() {
     const grid = document.getElementById('productGrid');
+    if (!grid) return;
+    
     grid.innerHTML = '<p class="text-center col-span-2 text-gray-500 py-10">Memuat produk dari etalase...</p>';
 
     try {
-        // Menarik data produk dan mengurutkannya dari yang paling baru di-upload (descending)
         const { data, error } = await supabaseClient
             .from('produk')
-            .select('*, toko(nama_toko, no_whatsapp, alamat_rt_rw)')
+            .select('*, toko(id, nama_toko, no_whatsapp, alamat_rt_rw)')
             .order('id', { ascending: false });
 
         if (error) throw error;
@@ -173,13 +30,11 @@ async function tampilkanProduk() {
 
         let html = '';
         data.forEach(item => {
-            // Gunakan foto asli dari database
             const foto = item.foto_url || 'https://via.placeholder.com/300x200?text=Tanpa+Foto';
-            const namaToko = item.toko.nama_toko;
-            const noWA = item.toko.no_whatsapp;
-            const lokasi = item.toko.alamat_rt_rw;
+            const namaToko = item.toko ? item.toko.nama_toko : 'Toko Lokal';
+            const noWA = item.toko ? item.toko.no_whatsapp : '';
+            const lokasi = item.toko ? item.toko.alamat_rt_rw : '';
 
-            // Membuat warna label stok (Hijau untuk Ready, Orange untuk Pre-Order/Terbatas)
             let badgeColor = item.status_stok === 'Ready Stock' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
             let labelStok = item.status_stok ? `<span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded shadow-sm ${badgeColor}">${item.status_stok}</span>` : '';
 
@@ -190,16 +45,14 @@ async function tampilkanProduk() {
                     ${labelStok}
                 </div>
                 <div class="p-3 flex flex-col flex-grow">
-                    <p class="text-xs text-gray-500 mb-1 flex items-center">
-                        📍 ${namaToko} (${lokasi})
-                    </p>
+                    <p class="text-xs text-gray-500 mb-1">📍 ${namaToko} (${lokasi})</p>
                     <h4 class="font-bold text-sm mb-1 line-clamp-2">${item.nama_produk}</h4>
                     <p class="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">${item.kategori_produk || 'Umum'}</p>
                     
                     <div class="mt-auto pt-3 border-t border-dashed flex justify-between items-center">
-                        <span class="font-bold text-green-600 text-sm">Rp ${item.harga.toLocaleString('id-ID')}</span>
-                        <button onclick="tambahKeKeranjang('${item.id}', '${item.nama_produk}', ${item.harga}, '${item.toko_id}', '${namaToko}', '${noWA}')" class="bg-green-100 text-green-700 p-1.5 rounded-md hover:bg-green-600 hover:text-white transition">
-                            <span class="font-bold px-1">+</span>
+                        <span class="font-bold text-green-600 text-sm">Rp ${Number(item.harga).toLocaleString('id-ID')}</span>
+                        <button onclick='tambahKeKeranjang(${JSON.stringify(item)})' class="bg-green-100 text-green-700 px-3 py-1.5 rounded-md hover:bg-green-600 hover:text-white transition text-xs font-bold">
+                            + Keranjang
                         </button>
                     </div>
                 </div>
@@ -207,7 +60,6 @@ async function tampilkanProduk() {
             `;
         });
 
-        // Menyuntikkan HTML ke dalam website
         grid.innerHTML = html;
     } catch (err) {
         console.error("Gagal mengambil data:", err);
@@ -215,5 +67,29 @@ async function tampilkanProduk() {
     }
 }
 
-// Menjalankan fungsi saat layar utama dibuka
+// 2. FUNGSI TAMBAH KE KERANJANG
+function tambahKeKeranjang( produk ) {
+    const ada = keranjang.find(item => item.id === produk.id);
+    if (ada) {
+        ada.jumlah += 1;
+    } else {
+        keranjang.push({ ...produk, jumlah: 1 });
+    }
+    updateBadgeKeranjang();
+    alert(`"${produk.nama_produk}" berhasil dimasukkan ke keranjang!`);
+}
+
+// 3. UPDATE ANGKA DI ICON KERANJANG
+function updateBadgeKeranjang() {
+    const badge = document.getElementById('badgeKeranjang');
+    if (badge) {
+        const totalItem = keranjang.reduce((sum, item) => sum + item.jumlah, 0);
+        badge.innerText = totalItem;
+    }
+}
+
+// 4. MODAL ATAU TAMPILAN KERANJANG (Opsional interaktif)
+// Anda bisa melanjutkannya dengan membuat fungsi checkout WhatsApp langsung ke nomor penjual per toko.
+
+// Jalankan saat pertama buka
 tampilkanProduk();

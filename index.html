@@ -1,9 +1,37 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <!-- NAVIGASI ATAS -->
+<nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+        <!-- Logo / Judul -->
+        <a href="index.html" class="flex items-center space-x-2">
+            <i class="fas fa-store text-green-600 text-2xl"></i>
+            <span class="text-xl font-extrabold text-green-700 tracking-tight">LOKAL SHOP</span>
+        </a>
+
+        <!-- Menu Kanan -->
+        <div class="flex items-center space-x-4">
+            <a href="daftar.html" class="hidden md:inline-block text-sm font-bold text-gray-600 hover:text-green-600 transition">Buka Toko</a>
+            <a href="tambah-produk.html" class="hidden md:inline-block text-sm font-bold text-gray-600 hover:text-green-600 transition">Tambah Menu</a>
+            
+            <!-- Tombol Keranjang (Biarkan seperti yang sudah ada di proyek Anda, sesuaikan id-nya jika perlu) -->
+            <button id="btnKeranjang" class="relative p-2 text-gray-700 hover:text-green-600 transition">
+                <i class="fas fa-shopping-cart text-xl"></i>
+                <span id="badgeKeranjang" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+            </button>
+        </div>
+    </div>
+    <!-- Menu Mobile (Muncul di layar HP di bagian bawah Header) -->
+    <div class="md:hidden flex justify-around border-t p-2 bg-gray-50 text-xs font-bold text-gray-600">
+        <a href="index.html" class="hover:text-green-600 flex flex-col items-center"><i class="fas fa-home mb-1 text-lg"></i> Beranda</a>
+        <a href="daftar.html" class="hover:text-green-600 flex flex-col items-center"><i class="fas fa-store mb-1 text-lg"></i> Buka Toko</a>
+        <a href="tambah-produk.html" class="hover:text-green-600 flex flex-col items-center"><i class="fas fa-plus-square mb-1 text-lg"></i> Tambah</a>
+    </div>
+</nav>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOKAL SHOP - Belanja Tetangga</title>
+    <title>LOKAL SHOP - Belanja Mudah Untuk Warga Lokal</title>
     <!-- Memanggil Tailwind CSS untuk desain (gratis & instan) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Memanggil Font Awesome untuk ikon (keranjang, plus, dll) -->
@@ -11,20 +39,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
-    <!-- NAVBAR ATAS -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-green-600">
-                <i class="fas fa-store mr-2"></i>LOKAL SHOP
-            </h1>
-            <!-- Tombol Keranjang -->
-            <button onclick="toggleCart()" id="cartBtn" class="relative p-2 text-gray-600 hover:text-green-600 transition">
-                <i class="fas fa-shopping-cart text-xl"></i>
-                <!-- Angka Merah di Keranjang -->
-                <span id="cartCount" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center transform translate-x-1 -translate-y-1">0</span>
-            </button>
-        </div>
-    </nav>
 
     <!-- HEADER / BANNER -->
     <header class="bg-green-600 text-white py-8 text-center">
