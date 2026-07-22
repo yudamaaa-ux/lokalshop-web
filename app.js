@@ -155,12 +155,14 @@ async function prosesCheckoutWA() {
 // -- FUNGSI MENARIK DATA PRODUK DARI DATABASE --
 async function tampilkanProduk() {
     const grid = document.getElementById('productGrid');
-    grid.innerHTML = '<p class="text-center col-span-2 text-gray-500 py-10">Memuat produk dari database...</p>';
+    grid.innerHTML = '<p class="text-center col-span-2 text-gray-500 py-10">Memuat produk dari etalase...</p>';
 
     try {
+        // Menarik data produk dan mengurutkannya dari yang paling baru di-upload (descending)
         const { data, error } = await supabaseClient
             .from('produk')
-            .select('*, toko(nama_toko, no_whatsapp, alamat_rt_rw)');
+            .select('*, toko(nama_toko, no_whatsapp, alamat_rt_rw)')
+            .order('id', { ascending: false });
 
         if (error) throw error;
 
@@ -171,24 +173,33 @@ async function tampilkanProduk() {
 
         let html = '';
         data.forEach(item => {
-            const foto = item.foto_url || 'https://via.placeholder.com/300x200?text=No+Image';
+            // Gunakan foto asli dari database
+            const foto = item.foto_url || 'https://via.placeholder.com/300x200?text=Tanpa+Foto';
             const namaToko = item.toko.nama_toko;
             const noWA = item.toko.no_whatsapp;
             const lokasi = item.toko.alamat_rt_rw;
 
-            // KODE HTML DI BAWAH INILAH YANG MEMBUAT TAMPILAN KOTAK PRODUK
+            // Membuat warna label stok (Hijau untuk Ready, Orange untuk Pre-Order/Terbatas)
+            let badgeColor = item.status_stok === 'Ready Stock' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+            let labelStok = item.status_stok ? `<span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded shadow-sm ${badgeColor}">${item.status_stok}</span>` : '';
+
             html += `
-            <div class="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition">
-                <div class="h-40 bg-gray-200 w-full object-cover">
+            <div class="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition flex flex-col">
+                <div class="h-40 bg-gray-100 w-full relative">
                     <img src="${foto}" alt="${item.nama_produk}" class="w-full h-full object-cover">
+                    ${labelStok}
                 </div>
-                <div class="p-3">
-                    <p class="text-xs text-gray-500 mb-1"><i class="fas fa-map-marker-alt text-red-400 mr-1"></i>${namaToko} (${lokasi})</p>
-                    <h4 class="font-bold text-sm mb-2 line-clamp-2">${item.nama_produk}</h4>
-                    <div class="flex justify-between items-center mt-2">
+                <div class="p-3 flex flex-col flex-grow">
+                    <p class="text-xs text-gray-500 mb-1 flex items-center">
+                        📍 ${namaToko} (${lokasi})
+                    </p>
+                    <h4 class="font-bold text-sm mb-1 line-clamp-2">${item.nama_produk}</h4>
+                    <p class="text-[10px] text-gray-400 mb-2 uppercase tracking-wide">${item.kategori_produk || 'Umum'}</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-dashed flex justify-between items-center">
                         <span class="font-bold text-green-600 text-sm">Rp ${item.harga.toLocaleString('id-ID')}</span>
                         <button onclick="tambahKeKeranjang('${item.id}', '${item.nama_produk}', ${item.harga}, '${item.toko_id}', '${namaToko}', '${noWA}')" class="bg-green-100 text-green-700 p-1.5 rounded-md hover:bg-green-600 hover:text-white transition">
-                            <i class="fas fa-plus"></i>
+                            <span class="font-bold px-1">+</span>
                         </button>
                     </div>
                 </div>
@@ -204,5 +215,5 @@ async function tampilkanProduk() {
     }
 }
 
-// Menjalankan fungsi
+// Menjalankan fungsi saat layar utama dibuka
 tampilkanProduk();
