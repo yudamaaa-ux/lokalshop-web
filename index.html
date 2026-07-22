@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOKAL SHOP - Belanja Tetangga</title>
+    <!-- Memanggil Tailwind CSS untuk desain (gratis & instan) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memanggil Font Awesome untuk ikon (keranjang, plus, dll) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- NAVBAR ATAS -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-green-600">
+                <i class="fas fa-store mr-2"></i>LOKAL SHOP
+            </h1>
+            <!-- Tombol Keranjang -->
+            <button onclick="toggleCart()" id="cartBtn" class="relative p-2 text-gray-600 hover:text-green-600 transition">
+                <i class="fas fa-shopping-cart text-xl"></i>
+                <!-- Angka Merah di Keranjang -->
+                <span id="cartCount" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center transform translate-x-1 -translate-y-1">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HEADER / BANNER -->
+    <header class="bg-green-600 text-white py-8 text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-2xl md:text-3xl font-bold mb-2">Belanja Cepat dari Tetangga Sendiri</h2>
+            <p class="text-green-100">Dukung UMKM Kecamatan. Tanpa ribet daftar, langsung chat WA penjual!</p>
+        </div>
+    </header>
+
+    <!-- DAFTAR PRODUK -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <h3 class="text-xl font-bold border-l-4 border-green-600 pl-3 mb-6">Produk Terbaru</h3>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="productGrid">
+            
+           
+
+        </div>
+    </main>
+
+    <!-- MODAL / POP-UP KERANJANG (Tersembunyi di awal) -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-end md:items-center">
+        <div class="bg-white w-full md:w-96 rounded-t-xl md:rounded-xl p-5 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3 mb-3">
+                <h3 class="font-bold text-lg"><i class="fas fa-shopping-basket text-green-600 mr-2"></i>Keranjang</h3>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <p class="text-xs text-orange-600 bg-orange-50 p-2 rounded mb-3">
+                <i class="fas fa-info-circle"></i> Hanya bisa belanja dari 1 toko yang sama dalam satu pesanan.
+            </p>
+
+            <!-- Tempat Item Muncul -->
+            <div id="cartItems" class="flex-1 overflow-y-auto mb-3">
+                <p class="text-center text-gray-400 text-sm italic mt-5">Keranjang masih kosong</p>
+            </div>
+
+            <!-- Total Harga & Tombol Checkout -->
+            <div class="border-t pt-3">
+                <div class="flex justify-between font-bold mb-3">
+                    <span>Total Belanja:</span>
+                    <span id="cartTotal" class="text-green-600">Rp 0</span>
+                </div>
+                <button onclick="prosesCheckoutWA()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition">
+                    <i class="fab fa-whatsapp mr-2"></i>Checkout via WA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menghubungkan HTML dengan JavaScript kita -->
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
