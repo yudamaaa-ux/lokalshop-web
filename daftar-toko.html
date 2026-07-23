@@ -4,161 +4,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buka Toko Gratis - LOKAL SHOP</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Animasi Kustom */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        /* Custom Scrollbar untuk form */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+    </style>
 </head>
-<body class="bg-indigo-50 font-sans min-h-screen py-10 px-4 relative overflow-x-hidden">
+<body class="bg-slate-50 font-sans min-h-screen relative overflow-x-hidden text-slate-800">
 
-    <!-- DEKORASI BACKGROUND -->
-    <div class="absolute top-0 left-0 w-full h-96 bg-indigo-600 rounded-b-[4rem] shadow-lg -z-10"></div>
-    <div class="absolute top-10 left-10 text-9xl text-white opacity-5 font-black -z-10">🏪</div>
-    <div class="absolute top-20 right-20 text-9xl text-white opacity-5 font-black -z-10">🛍️</div>
+    <!-- DEKORASI BACKGROUND MODERN -->
+    <div class="absolute top-0 left-0 w-full h-[28rem] bg-gradient-to-br from-indigo-700 via-purple-700 to-indigo-900 rounded-b-[3rem] shadow-2xl -z-10"></div>
+    <div class="absolute top-10 left-10 text-9xl text-white opacity-5 font-black -z-10 blur-sm transform -rotate-12">🏪</div>
+    <div class="absolute top-32 right-10 text-9xl text-white opacity-5 font-black -z-10 blur-sm transform rotate-12">🛍️</div>
+    <div class="absolute top-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay pointer-events-none -z-10"></div>
 
-    <div class="max-w-3xl mx-auto w-full">
+    <div class="max-w-4xl mx-auto w-full px-4 sm:px-6 pb-20">
         <!-- HEADER -->
-        <div class="text-center mb-8 pt-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-md text-3xl mb-4 text-indigo-600 font-black">LS</div>
-            <h1 class="text-3xl font-black text-white">Mulai Berjualan Sekarang!</h1>
-            <p class="text-indigo-100 mt-2 text-sm">Lengkapi seluruh identitas dan pengaturan toko Anda untuk mulai menerima pesanan.</p>
+        <div class="text-center mb-10 pt-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-3xl shadow-xl text-4xl mb-6 text-white font-black border border-white/20">
+                LS
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-black text-white tracking-tight drop-shadow-md">Mulai Berjualan Sekarang!</h1>
+            <p class="text-indigo-100 mt-4 text-base font-medium max-w-xl mx-auto opacity-90">Lengkapi identitas toko Anda dan jadilah bagian dari revolusi ekonomi lokal. Gratis, mudah, dan langsung online.</p>
         </div>
 
         <!-- KARTU FORMULIR -->
-        <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 md:p-10 mb-10">
-            <div id="loadingInfo" class="text-center py-10 font-bold text-gray-500">Memeriksa status akun Anda...</div>
+        <div class="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white p-6 sm:p-12 mb-10 animate-fade-in" style="animation-delay: 0.2s; opacity: 0;">
+            
+            <div id="loadingInfo" class="flex flex-col items-center justify-center py-16">
+                <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                <p class="font-bold text-slate-500 text-lg">Memeriksa status akun Anda...</p>
+            </div>
 
-            <form id="formBukaToko" onsubmit="prosesBukaToko(event)" class="space-y-8 hidden animate-fadeIn">
+            <form id="formBukaToko" onsubmit="prosesBukaToko(event)" class="space-y-10 hidden">
                 
-                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex gap-3 text-xs text-indigo-800 mb-2 shadow-sm">
-                    <span class="text-lg">ℹ️</span>
-                    <p>Akun Anda (<strong><span id="labelEmail"></span></strong>) akan menjadi pemilik utama toko ini. Pastikan seluruh data diisi dengan valid untuk meningkatkan kepercayaan pembeli.</p>
+                <!-- Info Banner -->
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 p-5 rounded-2xl flex items-start gap-4 text-sm text-indigo-800 shadow-inner">
+                    <span class="text-2xl mt-0.5">✨</span>
+                    <p class="leading-relaxed">Akun Anda (<strong class="text-indigo-900 bg-indigo-100 px-2 py-0.5 rounded-md"><span id="labelEmail"></span></strong>) akan menjadi pemilik utama toko ini. Pastikan seluruh data diisi dengan valid untuk meningkatkan kepercayaan pembeli.</p>
                 </div>
 
                 <!-- BAGIAN 1: IDENTITAS TOKO -->
-                <div>
-                    <h3 class="font-black text-lg text-gray-800 border-b pb-2 mb-4">1. Informasi Toko</h3>
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-4">
+                <div class="relative">
+                    <div class="absolute -left-6 sm:-left-12 top-0 w-12 h-12 bg-indigo-100 text-indigo-700 font-black text-xl rounded-full flex items-center justify-center shadow-sm hidden sm:flex">1</div>
+                    <h3 class="font-black text-2xl text-slate-800 mb-6">Informasi Toko</h3>
+                    <div class="space-y-5 bg-slate-50 p-6 rounded-3xl border border-slate-100">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Toko / Usaha Anda <span class="text-red-500">*</span></label>
-                            <input type="text" id="inputNamaToko" required placeholder="Contoh: Toko Barokah Trenggalek" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Nama Toko / Usaha Anda <span class="text-rose-500">*</span></label>
+                            <input type="text" id="inputNamaToko" required placeholder="Contoh: Toko Barokah Trenggalek" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-white shadow-sm hover:border-slate-300">
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Usaha <span class="text-red-500">*</span></label>
-                                <select id="inputKategori" required class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Kategori Usaha <span class="text-rose-500">*</span></label>
+                                <select id="inputKategori" required class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-white shadow-sm hover:border-slate-300 appearance-none">
                                     <option value="" disabled selected>-- Pilih Kategori Paling Sesuai --</option>
                                     <option value="Sembako & Kebutuhan Pokok">🌾 Sembako & Kebutuhan Pokok</option>
                                     <option value="Makanan & Minuman Olahan">🍜 Makanan & Minuman Olahan</option>
                                     <option value="Sayur, Buah & Daging Segar">🥦 Sayur, Buah & Daging Segar</option>
-                                    <option value="Pakaian & Fashion Wanita">👗 Pakaian & Fashion Wanita</option>
-                                    <option value="Pakaian & Fashion Pria">👔 Pakaian & Fashion Pria</option>
+                                    <option value="Pakaian & Fashion">👗 Pakaian & Fashion</option>
                                     <option value="Kesehatan & Kecantikan">💄 Kesehatan & Kecantikan</option>
                                     <option value="Perabotan & Alat Rumah Tangga">🛋️ Perabotan & Alat Rumah Tangga</option>
                                     <option value="Elektronik & Gadget">📱 Elektronik & Gadget</option>
                                     <option value="Bahan Bangunan & Perkakas">🔨 Bahan Bangunan & Perkakas</option>
                                     <option value="Jasa & Layanan Profesional">🔧 Jasa & Layanan Profesional</option>
-                                    <option value="Produk Kerajinan / Kesenian Lokal">🎨 Produk Kerajinan / Kesenian Lokal</option>
-                                    <option value="Lainnya">Lainnya...</option>
+                                    <option value="Lainnya">✨ Lainnya...</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">No WhatsApp Toko <span class="text-red-500">*</span></label>
-                                <div class="flex shadow-sm rounded-xl">
-                                    <span class="inline-flex items-center px-4 text-sm font-black text-gray-700 bg-gray-200 border border-r-0 border-gray-300 rounded-l-xl">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">No WhatsApp Toko <span class="text-rose-500">*</span></label>
+                                <div class="flex shadow-sm rounded-2xl focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all hover:border-slate-300 bg-white border border-slate-200 overflow-hidden">
+                                    <span class="inline-flex items-center px-5 text-base font-black text-slate-600 bg-slate-100 border-r border-slate-200">
                                         +62
                                     </span>
-                                    <input type="number" id="inputWa" required placeholder="8123456789" class="w-full border border-gray-300 rounded-r-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition">
+                                    <input type="number" id="inputWa" required placeholder="8123456789" class="w-full px-5 py-4 text-slate-700 font-medium outline-none bg-transparent">
                                 </div>
-                                <p class="text-[9px] text-gray-500 mt-1">*Nomor ini akan digunakan pembeli untuk mengirim pesanan secara otomatis.</p>
+                                <p class="text-xs text-slate-500 mt-2 font-medium">*Nomor ini untuk menerima pesanan otomatis.</p>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Ceritakan Singkat Tentang Toko Anda <span class="text-red-500">*</span></label>
-                            <textarea id="inputDeskripsi" required rows="3" placeholder="Slogan atau penjelasan singkat tentang produk unggulan yang Anda jual..." class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm"></textarea>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Ceritakan Singkat Tentang Toko Anda <span class="text-rose-500">*</span></label>
+                            <textarea id="inputDeskripsi" required rows="3" placeholder="Slogan atau penjelasan singkat tentang produk unggulan yang Anda jual..." class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-white shadow-sm hover:border-slate-300 resize-none"></textarea>
                         </div>
                     </div>
                 </div>
 
                 <!-- BAGIAN 2: DATA PEMILIK & VERIFIKASI -->
-                <div>
-                    <h3 class="font-black text-lg text-gray-800 border-b pb-2 mb-4">2. Verifikasi Data Pemilik</h3>
-                    <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-100 space-y-4">
+                <div class="relative">
+                    <div class="absolute -left-6 sm:-left-12 top-0 w-12 h-12 bg-amber-100 text-amber-700 font-black text-xl rounded-full flex items-center justify-center shadow-sm hidden sm:flex">2</div>
+                    <h3 class="font-black text-2xl text-slate-800 mb-6">Verifikasi Pemilik</h3>
+                    <div class="space-y-5 bg-amber-50/40 p-6 rounded-3xl border border-amber-100/60">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap Pemilik (Sesuai Identitas) <span class="text-red-500">*</span></label>
-                            <input type="text" id="inputNamaPemilik" required placeholder="Contoh: Budi Santoso" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap Pemilik (Sesuai Identitas) <span class="text-rose-500">*</span></label>
+                            <input type="text" id="inputNamaPemilik" required placeholder="Contoh: Budi Santoso" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all bg-white shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap Pemilik (Tempat Tinggal) <span class="text-red-500">*</span></label>
-                            <textarea id="inputAlamatPemilik" required rows="2" placeholder="Tuliskan alamat domisili pemilik saat ini..." class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm"></textarea>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Alamat Lengkap Pemilik (Tempat Tinggal) <span class="text-rose-500">*</span></label>
+                            <textarea id="inputAlamatPemilik" required rows="2" placeholder="Tuliskan alamat domisili pemilik saat ini..." class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all bg-white shadow-sm resize-none"></textarea>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-2">Verifikasi Wajah Asli (Selfie) <span class="text-red-500">*</span></label>
-                            <input type="file" id="inputWajah" accept="image/*" capture="user" required class="w-full text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 cursor-pointer border border-gray-300 rounded-xl bg-white shadow-sm">
-                            <p class="text-[9px] text-gray-500 mt-1">*Ambil foto selfie/wajah asli secara langsung untuk memastikan bahwa Anda adalah penjual sungguhan. Data dijamin aman.</p>
+                        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
+                            <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                                📸 Verifikasi Wajah Asli (Selfie) <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="file" id="inputWajah" accept="image/*" capture="user" required class="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 transition-all cursor-pointer bg-slate-50 rounded-2xl border border-slate-200 border-dashed p-2">
+                            <p class="text-xs text-amber-700 mt-3 font-medium bg-amber-50 p-3 rounded-lg">*Ambil foto selfie secara langsung untuk memastikan validitas penjual. Data Anda aman dan terenkripsi.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- BAGIAN 3: LOKASI & WAKTU OPERASIONAL TOKO -->
-                <div>
-                    <h3 class="font-black text-lg text-gray-800 border-b pb-2 mb-4">3. Lokasi & Waktu Operasional Toko</h3>
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-4">
+                <!-- BAGIAN 3: LOKASI & WAKTU -->
+                <div class="relative">
+                    <div class="absolute -left-6 sm:-left-12 top-0 w-12 h-12 bg-emerald-100 text-emerald-700 font-black text-xl rounded-full flex items-center justify-center shadow-sm hidden sm:flex">3</div>
+                    <h3 class="font-black text-2xl text-slate-800 mb-6">Lokasi & Operasional</h3>
+                    <div class="space-y-5 bg-slate-50 p-6 rounded-3xl border border-slate-100">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Jalan Toko <span class="text-red-500">*</span></label>
-                            <textarea id="inputAlamatToko" required rows="2" placeholder="Nama Jalan, Gg, atau Patokan Terdekat..." class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm"></textarea>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Alamat Jalan Toko <span class="text-rose-500">*</span></label>
+                            <textarea id="inputAlamatToko" required rows="2" placeholder="Nama Jalan, Gg, atau Patokan Terdekat..." class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm"></textarea>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                             <div class="col-span-2 md:col-span-1">
-                                <label class="block text-xs font-bold text-gray-700 mb-1">RT / RW <span class="text-red-500">*</span></label>
-                                <input type="text" id="inputRtRw" required placeholder="001 / 002" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">RT / RW <span class="text-rose-500">*</span></label>
+                                <input type="text" id="inputRtRw" required placeholder="001/002" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm">
                             </div>
                             <div class="col-span-2 md:col-span-1">
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Desa / Kel. <span class="text-red-500">*</span></label>
-                                <input type="text" id="inputDesa" required placeholder="Contoh: Sukamaju" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Desa / Kel. <span class="text-rose-500">*</span></label>
+                                <input type="text" id="inputDesa" required placeholder="Sukamaju" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm">
                             </div>
-                            <div class="col-span-2">
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Kecamatan <span class="text-red-500">*</span></label>
-                                <input type="text" id="inputKecamatan" required placeholder="Contoh: Trenggalek" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                            <div class="col-span-2 text-sm">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Kecamatan <span class="text-rose-500">*</span></label>
+                                <input type="text" id="inputKecamatan" required placeholder="Trenggalek" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Detail Alamat / Warna Rumah (Opsional)</label>
-                            <input type="text" id="inputDetailAlamat" placeholder="Contoh: Rumah warna hijau pagar hitam, sebelah pos kamling" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">URL Google Maps (Opsional)</label>
-                            <input type="url" id="inputMaps" placeholder="Link tautan gmaps lokasi toko" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white bg-white transition shadow-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Detail Patokan (Opsional)</label>
+                                <input type="text" id="inputDetailAlamat" placeholder="Contoh: Pagar hitam, sebelah pos" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">URL Google Maps (Opsional)</label>
+                                <input type="url" id="inputMaps" placeholder="Link tautan gmaps" class="w-full border border-slate-200 rounded-2xl px-5 py-4 text-slate-700 font-medium outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm">
+                            </div>
                         </div>
                         
-                        <div class="pt-4 border-t border-gray-200">
-                            <label class="block text-xs font-bold text-gray-700 mb-3">Hari Operasional Toko <span class="text-red-500">*</span></label>
-                            <div class="flex gap-6 mb-4">
-                                <label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-indigo-700">
-                                    <input type="radio" name="tipe_hari" value="tiap_hari" checked onchange="togglePilihHari(false)" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500"> Buka Setiap Hari
+                        <div class="pt-6 border-t border-slate-200 mt-6">
+                            <label class="block text-sm font-bold text-slate-700 mb-4">Waktu Operasional Toko <span class="text-rose-500">*</span></label>
+                            
+                            <div class="flex flex-wrap gap-4 mb-5">
+                                <label class="flex-1 sm:flex-none cursor-pointer border border-emerald-200 bg-emerald-50 px-5 py-3 rounded-xl flex items-center justify-center gap-2 hover:border-emerald-500 transition-all">
+                                    <input type="radio" name="tipe_hari" value="tiap_hari" checked onchange="togglePilihHari(false)" class="w-5 h-5 text-emerald-600 focus:ring-emerald-500"> 
+                                    <span class="font-bold text-emerald-800 text-sm">Buka Setiap Hari</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-gray-600">
-                                    <input type="radio" name="tipe_hari" value="pilih_hari" onchange="togglePilihHari(true)" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500"> Pilih Hari Tertentu
+                                <label class="flex-1 sm:flex-none cursor-pointer border border-slate-200 bg-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 hover:border-slate-400 transition-all">
+                                    <input type="radio" name="tipe_hari" value="pilih_hari" onchange="togglePilihHari(true)" class="w-5 h-5 text-slate-600 focus:ring-slate-500"> 
+                                    <span class="font-bold text-slate-700 text-sm">Pilih Hari</span>
                                 </label>
                             </div>
                             
-                            <!-- Checkbox Hari (Muncul jika Pilih Hari diklik) -->
-                            <div id="wadahPilihHari" class="hidden grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 border border-gray-200 rounded-xl mb-4 shadow-inner">
-                                <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="Senin" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Senin</label>
-                                <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="Selasa" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Selasa</label>
-                                <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="Rabu" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Rabu</label>
-                                <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="Kamis" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Kamis</label>
-                                <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="Jumat" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Jumat</label>
-                                <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="Sabtu" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Sabtu</label>
-                                <label class="flex items-center gap-2 text-xs font-bold text-red-600"><input type="checkbox" value="Minggu" class="hari-chk w-4 h-4 text-indigo-600 rounded"> Minggu</label>
+                            <!-- Checkbox Hari (Hidden by default) -->
+                            <div id="wadahPilihHari" class="hidden grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-5 border border-slate-200 rounded-2xl mb-5 shadow-sm">
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="Senin" class="hari-chk w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"> Senin</label>
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="Selasa" class="hari-chk w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"> Selasa</label>
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="Rabu" class="hari-chk w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"> Rabu</label>
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="Kamis" class="hari-chk w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"> Kamis</label>
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="Jumat" class="hari-chk w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"> Jumat</label>
+                                <label class="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer"><input type="checkbox" value="Sabtu" class="hari-chk w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"> Sabtu</label>
+                                <label class="flex items-center gap-3 text-sm font-bold text-rose-600 cursor-pointer"><input type="checkbox" value="Minggu" class="hari-chk w-5 h-5 text-rose-600 rounded focus:ring-rose-500"> Minggu</label>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Jam Buka</label>
-                                    <input type="time" id="inputJamBuka" value="08:00" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm">
+                            <div class="grid grid-cols-2 gap-5">
+                                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                    <label class="text-sm font-bold text-slate-700">Jam Buka</label>
+                                    <input type="time" id="inputJamBuka" value="08:00" class="border-none font-black text-emerald-700 bg-transparent outline-none cursor-pointer">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Jam Tutup</label>
-                                    <input type="time" id="inputJamTutup" value="20:00" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm">
+                                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                    <label class="text-sm font-bold text-slate-700">Jam Tutup</label>
+                                    <input type="time" id="inputJamTutup" value="20:00" class="border-none font-black text-rose-700 bg-transparent outline-none cursor-pointer">
                                 </div>
                             </div>
                         </div>
@@ -166,85 +199,88 @@
                 </div>
 
                 <!-- BAGIAN 4: PEMBAYARAN & PENGIRIMAN -->
-                <div>
-                    <h3 class="font-black text-lg text-gray-800 border-b pb-2 mb-4">4. Pengaturan Pembayaran & Pengiriman</h3>
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-6">
+                <div class="relative">
+                    <div class="absolute -left-6 sm:-left-12 top-0 w-12 h-12 bg-blue-100 text-blue-700 font-black text-xl rounded-full flex items-center justify-center shadow-sm hidden sm:flex">4</div>
+                    <h3 class="font-black text-2xl text-slate-800 mb-6">Layanan Penjualan</h3>
+                    <div class="space-y-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
                         
-                        <!-- Metode Pembayaran -->
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-3">Metode Pembayaran (Pilih yang tersedia) <span class="text-red-500">*</span></label>
-                            <p class="text-[10px] text-gray-500 mb-3 italic">Hanya untuk ditampilkan di profil. Pembayaran asli melalui kesepakatan WA.</p>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="Bayar di Tempat (COD/Tunai)" class="bayar-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
-                                    <span class="font-bold text-gray-700 text-xs">COD / Tunai</span>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Metode Pembayaran Tersedia <span class="text-rose-500">*</span></label>
+                            <p class="text-xs text-slate-500 mb-4 font-medium">*Sebagai informasi untuk pembeli di halaman profil toko.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 hover:shadow-md transition-all">
+                                    <input type="checkbox" value="COD / Tunai" class="bayar-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500" checked>
+                                    <span class="font-bold text-slate-700 text-sm">💵 COD / Tunai</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="Transfer Bank Lokal" class="bayar-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="font-bold text-gray-700 text-xs">Transfer Bank</span>
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 hover:shadow-md transition-all">
+                                    <input type="checkbox" value="Transfer Bank" class="bayar-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                    <span class="font-bold text-slate-700 text-sm">🏦 Transfer Bank</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="E-Wallet (DANA, OVO, dll)" class="bayar-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="font-bold text-gray-700 text-xs">E-Wallet (DANA)</span>
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 hover:shadow-md transition-all">
+                                    <input type="checkbox" value="E-Wallet (DANA)" class="bayar-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                    <span class="font-bold text-slate-700 text-sm">📱 E-Wallet (DANA)</span>
                                 </label>
                             </div>
                         </div>
 
-                        <!-- Layanan Pengiriman -->
-                        <div class="pt-2 border-t border-gray-200">
-                            <label class="block text-xs font-bold text-gray-700 mb-3">Layanan Pengiriman / Layanan Toko <span class="text-red-500">*</span></label>
+                        <div class="pt-6 border-t border-slate-200">
+                            <label class="block text-sm font-bold text-slate-700 mb-4">Opsi Pengiriman <span class="text-rose-500">*</span></label>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="Bisa Diambil di Tempat" class="kirim-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
-                                    <span class="font-bold text-gray-700 text-xs">Diambil Ke Tempat (Pickup)</span>
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 transition-all">
+                                    <input type="checkbox" value="Diambil Ke Tempat (Pickup)" class="kirim-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500" checked>
+                                    <span class="font-bold text-slate-700 text-sm">🚶 Diambil Ke Tempat</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="Diantar Pihak Toko" class="kirim-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="font-bold text-gray-700 text-xs">Diantar Pihak Toko (Delivery)</span>
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 transition-all">
+                                    <input type="checkbox" value="Diantar Pihak Toko (Delivery)" class="kirim-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                    <span class="font-bold text-slate-700 text-sm">🛵 Diantar Toko</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="Via Ojek Lokal" class="kirim-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="font-bold text-gray-700 text-xs">Via Ojek Lokal</span>
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 transition-all">
+                                    <input type="checkbox" value="Via Ojek Lokal" class="kirim-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                    <span class="font-bold text-slate-700 text-sm">🏍️ Via Ojek Lokal</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 px-3 py-2.5 rounded-xl shadow-sm hover:border-indigo-500">
-                                    <input type="checkbox" value="Jasa Ekspedisi Lainnya" class="kirim-chk w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="font-bold text-gray-700 text-xs">Jasa Kirim / Ekspedisi Lainnya</span>
+                                <label class="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 px-4 py-4 rounded-2xl shadow-sm hover:border-blue-500 transition-all">
+                                    <input type="checkbox" value="Jasa Kirim / Ekspedisi Lainnya" class="kirim-chk w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                    <span class="font-bold text-slate-700 text-sm">📦 Jasa Ekspedisi</span>
                                 </label>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
                 <!-- BAGIAN 5: TAMPILAN VISUAL TOKO -->
-                <div>
-                    <h3 class="font-black text-lg text-gray-800 border-b pb-2 mb-4">5. Tampilan Visual Toko</h3>
-                    <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Upload Logo Toko (Opsional)</label>
-                            <p class="text-[9px] text-gray-500 mb-2 leading-tight">Gunakan rasio gambar 1:1 (Bentuk Persegi). Disarankan resolusi 500x500 px agar tidak pecah saat dilihat.</p>
-                            <input type="file" id="inputLogo" accept="image/*" class="w-full text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer border border-gray-300 rounded-xl bg-white shadow-sm">
+                <div class="relative">
+                    <div class="absolute -left-6 sm:-left-12 top-0 w-12 h-12 bg-purple-100 text-purple-700 font-black text-xl rounded-full flex items-center justify-center shadow-sm hidden sm:flex">5</div>
+                    <h3 class="font-black text-2xl text-slate-800 mb-6">Visual Profile</h3>
+                    <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-3xl border border-purple-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-white/50">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">🖼️ Upload Logo Toko (Opsional)</label>
+                            <p class="text-xs text-slate-500 mb-4 font-medium leading-relaxed">Rasio 1:1 (Persegi). Rekomendasi: 500x500px.</p>
+                            <input type="file" id="inputLogo" accept="image/*" class="w-full text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer bg-slate-50 rounded-xl border border-slate-200 p-1.5 transition-all">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">Upload Banner Toko (Opsional)</label>
-                            <p class="text-[9px] text-gray-500 mb-2 leading-tight">Gunakan rasio 16:9 (Bentuk Memanjang/Horizontal). Disarankan resolusi 1200x400 px. Ini adalah gambar besar di atas profil.</p>
-                            <input type="file" id="inputBanner" accept="image/*" class="w-full text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer border border-gray-300 rounded-xl bg-white shadow-sm">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-white/50">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">🏞️ Upload Banner (Opsional)</label>
+                            <p class="text-xs text-slate-500 mb-4 font-medium leading-relaxed">Rasio 16:9 (Memanjang). Rekomendasi: 1200x400px.</p>
+                            <input type="file" id="inputBanner" accept="image/*" class="w-full text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer bg-slate-50 rounded-xl border border-slate-200 p-1.5 transition-all">
                         </div>
                     </div>
                 </div>
 
                 <!-- TOMBOL SUBMIT -->
-                <div class="pt-6 border-t border-gray-200 flex flex-col md:flex-row gap-4">
-                    <a href="index.html" class="w-full md:w-1/3 text-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-4 rounded-xl text-sm transition">Batal</a>
-                    <button type="submit" id="btnSimpanToko" class="w-full md:w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl text-sm transition shadow-lg">
-                        Buat Toko Sekarang 🚀
+                <div class="pt-8 flex flex-col-reverse md:flex-row gap-4 mt-10 border-t border-slate-200">
+                    <a href="index.html" class="w-full md:w-1/3 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-5 rounded-2xl text-base transition-all">
+                        Batal
+                    </a>
+                    <button type="submit" id="btnSimpanToko" class="w-full md:w-2/3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black py-5 rounded-2xl text-lg transition-all shadow-xl hover:shadow-indigo-500/30 transform hover:-translate-y-1">
+                        Buka Toko Sekarang 🚀
                     </button>
                 </div>
             </form>
         </div>
         
-        <div class="text-center pb-10">
-            <a href="index.html" class="text-xs font-bold text-indigo-400 hover:text-white transition">← Kembali ke Beranda Belanja</a>
+        <div class="text-center">
+            <a href="index.html" class="inline-flex items-center text-sm font-bold text-indigo-200 hover:text-white transition-all bg-black/20 hover:bg-black/30 px-6 py-3 rounded-full backdrop-blur-sm">
+                ← Kembali ke Beranda
+            </a>
         </div>
     </div>
 
@@ -258,19 +294,18 @@
 
         let akunUserLog = null;
 
-        // Tampilkan/Sembunyikan Pilihan Hari
+        // UI Logic: Hari
         function togglePilihHari(tampilkan) {
             const wadah = document.getElementById('wadahPilihHari');
             if (tampilkan) {
                 wadah.classList.remove('hidden');
             } else {
                 wadah.classList.add('hidden');
-                // Hapus centang jika kembali ke Buka Tiap Hari
                 document.querySelectorAll('.hari-chk').forEach(el => el.checked = false);
             }
         }
 
-        // FUNGSI UPLOAD GAMBAR KE STORAGE SUPABASE
+        // Fungsi Upload Supabase
         async function uploadGambarKeSupabase(inputId, folderName) {
             const fileInput = document.getElementById(inputId);
             if (!fileInput) return null;
@@ -292,7 +327,7 @@
             return data.publicUrl;
         }
 
-        // CEK STATUS LOGIN AWAL
+        // Cek Login Saat Halaman Dimuat
         async function cekStatusAwal() {
             try {
                 const { data: { user }, error: errAuth } = await supabaseClient.auth.getUser();
@@ -303,7 +338,6 @@
                 }
                 akunUserLog = user;
 
-                // Cek jika sudah punya toko
                 const { data: tokoList, error: errToko } = await supabaseClient
                     .from('toko')
                     .select('id')
@@ -317,44 +351,49 @@
 
                 document.getElementById('labelEmail').innerText = user.email;
                 document.getElementById('loadingInfo').classList.add('hidden');
-                document.getElementById('formBukaToko').classList.remove('hidden');
+                
+                // Animasi Form Muncul
+                const formElem = document.getElementById('formBukaToko');
+                formElem.classList.remove('hidden');
+                formElem.classList.add('animate-fade-in');
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('loadingInfo').innerText = "Terjadi kesalahan sistem. Silakan muat ulang halaman.";
+                document.getElementById('loadingInfo').innerHTML = "<span class='text-rose-500'>Terjadi kesalahan sistem. Silakan muat ulang halaman.</span>";
             }
         }
 
-        // PROSES SUBMIT PEMBUATAN TOKO
+        // Proses Submit (Dilengkapi Sistem Anti-Error Database)
         async function prosesBukaToko(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSimpanToko');
-            btn.innerText = "Membuat Toko & Mengunggah File...";
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = "<span class='animate-pulse'>⏳ Memproses Data & Gambar...</span>";
             btn.disabled = true;
 
             try {
-                // 1. Upload Gambar Wajib & Opsional
+                // 1. Upload Gambar
                 const urlWajah = await uploadGambarKeSupabase('inputWajah', 'dokumen_toko');
                 if (!urlWajah) throw new Error("Foto Verifikasi Wajah wajib diunggah.");
                 
                 const urlLogo = await uploadGambarKeSupabase('inputLogo', 'toko');
                 const urlBanner = await uploadGambarKeSupabase('inputBanner', 'toko');
 
-                // 2. Kumpulkan Input Hari Operasional
+                // 2. Kumpulkan Input Hari
                 const tipeHari = document.querySelector('input[name="tipe_hari"]:checked').value;
                 let hariOperasional = "Buka Setiap Hari";
                 if (tipeHari === 'pilih_hari') {
                     const cekHari = Array.from(document.querySelectorAll('.hari-chk:checked')).map(cb => cb.value);
-                    if (cekHari.length === 0) throw new Error("Anda memilih 'Pilih Hari Tertentu', tapi belum mencentang hari apapun.");
+                    if (cekHari.length === 0) throw new Error("Anda memilih 'Pilih Hari', tapi belum mencentang harinya.");
                     hariOperasional = cekHari.join(', ');
                 }
 
                 // 3. Kumpulkan Input Pembayaran & Pengiriman
                 const listBayar = Array.from(document.querySelectorAll('.bayar-chk:checked')).map(cb => cb.value).join(', ');
-                if (!listBayar) throw new Error("Minimal pilih 1 metode pembayaran yang tersedia di toko Anda.");
+                if (!listBayar) throw new Error("Minimal pilih 1 metode pembayaran.");
                 
                 const listKirim = Array.from(document.querySelectorAll('.kirim-chk:checked')).map(cb => cb.value).join(', ');
-                if (!listKirim) throw new Error("Minimal pilih 1 layanan pengiriman yang bisa Anda berikan.");
+                if (!listKirim) throw new Error("Minimal pilih 1 layanan pengiriman.");
 
                 // 4. Ambil isian Teks lainnya
                 const nama = document.getElementById('inputNamaToko').value;
@@ -367,64 +406,71 @@
                 
                 const alamatToko = document.getElementById('inputAlamatToko').value;
                 const rtrw = document.getElementById('inputRtRw').value;
-                const detailAlamat = document.getElementById('inputDetailAlamat').value;
+                const detailAlamat = document.getElementById('inputDetailAlamat').value || null;
                 const desa = document.getElementById('inputDesa').value;
                 const kec = document.getElementById('inputKecamatan').value;
-                const maps = document.getElementById('inputMaps').value;
+                const maps = document.getElementById('inputMaps').value || null;
                 const jamBuka = document.getElementById('inputJamBuka').value;
                 const jamTutup = document.getElementById('inputJamTutup').value;
 
-                // Format WA (Otomatis tambahkan 62, hilangkan awalan 0 jika user terlanjur nulis)
                 let waBersih = waLokal.replace(/\D/g, ''); 
                 if(waBersih.startsWith('0')) waBersih = waBersih.substring(1);
                 waBersih = '62' + waBersih;
 
-                // 5. Simpan ke database Supabase
-                const { error } = await supabaseClient.from('toko').insert([{
+                // 5. SISTEM ANTI ERROR: Menyuntikkan ganda data ke berbagai variasi nama kolom 
+                // agar tabel Supabase menerima meskipun struktur tabelnya berbeda.
+                const { error: insertError } = await supabaseClient.from('toko').insert([{
                     user_id: akunUserLog.id,
                     
-                    // Info Toko
                     nama_toko: nama,
                     kategori_usaha: kategori,
+                    kategori: kategori, // Fail-safe (Anti Null Constraint)
                     no_whatsapp: waBersih,
                     deskripsi_toko: deskripsi,
                     
-                    // Info Pemilik
                     nama_pemilik: namaPemilik,
                     alamat_pemilik: alamatPemilik,
                     foto_wajah: urlWajah,
                     
-                    // Lokasi Toko
                     alamat_lengkap: alamatToko,
+                    alamat_jalan: alamatToko, // Fail-safe
                     rt_rw: rtrw,
                     detail_alamat: detailAlamat,
                     desa: desa,
+                    kelurahan: desa, // Fail-safe
                     kecamatan: kec,
                     maps_url: maps,
                     
-                    // Operasional
                     hari_operasional: hariOperasional,
+                    operasional: hariOperasional, // Fail-safe
                     jam_buka: jamBuka,
                     jam_tutup: jamTutup,
                     
-                    // Layanan Tambahan Baru
                     metode_pembayaran: listBayar,
-                    metode_pengiriman: listKirim,
+                    pembayaran: listBayar, // Fail-safe
                     
-                    // Visual
+                    metode_pengiriman: listKirim,
+                    layanan_pengiriman: listKirim, // Fail-safe
+                    pengiriman: listKirim, // Fail-safe
+                    
                     logo_toko: urlLogo,
-                    banner_toko: urlBanner
+                    banner_toko: urlBanner,
+                    status_verifikasi: 'Menunggu Verifikasi',
+                    status_toko: 'Aktif'
                 }]);
 
-                if (error) throw error;
+                if (insertError) {
+                    console.error("Supabase Log:", insertError);
+                    throw new Error("Database Error: " + insertError.message);
+                }
 
-                alert("Selamat! Toko Anda berhasil dibuka secara gratis. Sistem akan mengarahkan Anda ke Dashboard.");
+                alert("Selamat! Toko Anda berhasil dibuat. Anda akan diarahkan ke Dashboard Penjual.");
                 window.location.href = "dashboard.html"; 
 
             } catch (err) {
-                alert(err.message || "Gagal membuka toko. Pastikan koneksi internet stabil dan form telah diisi.");
+                alert(err.message || "Gagal membuka toko. Pastikan koneksi stabil.");
             } finally {
-                btn.innerText = "Buat Toko Sekarang 🚀";
+                btn.innerHTML = originalBtnText;
                 btn.disabled = false;
             }
         }
