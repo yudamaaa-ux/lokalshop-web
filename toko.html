@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Toko - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-24">
+
+    <!-- NAVIGASI ATAS -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-green-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">LS</div>
+                <span class="text-xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
+            </a>
+            <a href="index.html" class="text-xs font-bold text-gray-500 hover:text-green-600 transition">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+
+    <!-- KONTEN UTAMA -->
+    <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+        
+        <div id="loadingToko" class="text-center py-20 text-gray-400 font-bold text-sm">Memuat profil toko...</div>
+
+        <div id="wrapperProfilToko" class="hidden space-y-6">
+
+            <!-- HEADER TOKO (Banner & Logo) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="h-44 md:h-60 w-full bg-gray-200 relative">
+                    <img id="bannerToko" src="" alt="Banner" class="w-full h-full object-cover hidden">
+                    <div id="bannerPlaceholder" class="w-full h-full flex items-center justify-center bg-gradient-to-r from-green-600 to-teal-700 text-white font-black text-lg">
+                        LOKAL SHOP MITRA KECAMATAN
+                    </div>
+                </div>
+
+                <div class="px-6 pb-6 relative flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b">
+                    <div class="flex items-end gap-4 -mt-12 md:-mt-16">
+                        <div class="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-white p-1.5 shadow-md border border-gray-200 overflow-hidden flex items-center justify-center bg-gray-50">
+                            <img id="logoToko" src="" alt="Logo" class="w-full h-full object-cover rounded-xl hidden">
+                            <span id="logoPlaceholder" class="text-3xl font-black text-green-600">🏪</span>
+                        </div>
+                        <div class="mb-1">
+                            <div class="flex items-center gap-2">
+                                <h1 id="namaToko" class="text-xl md:text-2xl font-black text-gray-800">Nama Toko</h1>
+                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-green-200">🟢 Aktif</span>
+                            </div>
+                            <p id="kategoriToko" class="text-xs text-green-600 font-bold mt-0.5">Kategori Usaha</p>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL AKSI & KONTROL PEMILIK -->
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <a id="btnChatWa" href="#" target="_blank" class="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm text-center">
+                            💬 Chat WhatsApp
+                        </a>
+                        <button onclick="bagikanToko()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition">
+                            📤 Bagikan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MENU TAMBAHAN KHUSUS PEMILIK TOKO -->
+                <div id="panelPemilikToko" class="hidden bg-indigo-50 border-b border-indigo-100 px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <span class="font-bold text-indigo-900">🛠️ Panel Pemilik Toko:</span>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="dashboard.html" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-sm">📦 Kelola Toko</a>
+                    </div>
+                </div>
+
+                <!-- INFORMASI LENGKAP -->
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-gray-600">
+                    <div class="space-y-2">
+                        <p class="font-bold text-gray-800 border-b pb-1">📍 Lokasi & Alamat</p>
+                        <p><strong>Alamat:</strong> <span id="alamatLengkap">-</span></p>
+                        <p><strong>Wilayah:</strong> <span id="wilayahToko">-</span></p>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="font-bold text-gray-800 border-b pb-1">🕒 Operasional & Layanan</p>
+                        <p><strong>Jam Buka:</strong> <span id="jamOperasional">-</span></p>
+                        <p><strong>Pembayaran:</strong> <span>COD, Transfer Bank, Tunai</span></p>
+                    </div>
+                    <div class="space-y-2 bg-gray-50 p-3 rounded-xl border">
+                        <p class="font-bold text-gray-700 mb-1">📝 Deskripsi Toko:</p>
+                        <p id="deskripsiToko" class="text-gray-500 italic">Belum ada deskripsi.</p>
+                    </div>
+                </div>
+
+                <!-- STATISTIK SINGKAT TOKO -->
+                <div class="bg-gray-50 px-6 py-4 border-t grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase font-bold">Total Produk</p>
+                        <p id="statTotalProduk" class="text-lg font-black text-gray-800">0</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase font-bold">Rating</p>
+                        <p class="text-lg font-black text-amber-500">⭐ 5.0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KATALOG PRODUK TOKO -->
+            <div class="space-y-4 mt-6">
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="font-black text-gray-800 text-sm">📦 Katalog Produk Toko</h2>
+                    <input type="text" id="cariProduk" onkeyup="filterProduk()" placeholder="🔍 Cari produk..." class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                
+                <div id="gridProduk" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Dimuat JS -->
+                </div>
+                <div id="kosongProduk" class="hidden bg-gray-50 p-10 text-center rounded-2xl border border-dashed border-gray-300 text-gray-500 font-bold text-sm">
+                    Toko ini belum menambahkan produk.
+                </div>
+            </div>
+
+            <!-- BAGIAN ULASAN PEMBELI -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 border-t border-gray-200 pt-8">
+                
+                <!-- FORM TULIS ULASAN -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-black text-gray-800 text-sm mb-4">Tulis Ulasan untuk Toko Ini</h3>
+                    <form id="formUlasan" onsubmit="kirimUlasan(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Anda</label>
+                            <input type="text" id="ulasanNama" required placeholder="Contoh: Budi Santoso" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Bintang Penilaian</label>
+                            <select id="ulasanBintang" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50">
+                                <option value="5">⭐⭐⭐⭐⭐ (Sangat Bagus)</option>
+                                <option value="4">⭐⭐⭐⭐ (Bagus)</option>
+                                <option value="3">⭐⭐⭐ (Cukup)</option>
+                                <option value="2">⭐⭐ (Kurang)</option>
+                                <option value="1">⭐ (Sangat Kurang)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Komentar / Pengalaman Anda</label>
+                            <textarea id="ulasanKomentar" required rows="3" placeholder="Bagaimana kualitas produk dan pelayanan toko ini?" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-4 py-3 rounded-xl transition shadow-md">
+                            Kirim Ulasan Sekarang
+                        </button>
+                    </form>
+                </div>
+
+                <!-- DAFTAR ULASAN DARI PEMBELI -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
+                    <h3 class="font-black text-gray-800 text-sm mb-4 border-b pb-2">⭐ Ulasan Terbaru</h3>
+                    <div id="daftarUlasan" class="space-y-3 flex-grow overflow-y-auto max-h-80 pr-2">
+                        <div class="text-center text-xs text-gray-400 py-10 font-bold">Belum ada ulasan. Jadilah yang pertama!</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        // ----------------------------
+
+        let semuaProdukList = [];
+        let idTokoAktifUrl = null;
+
+        async function muatHalamanToko() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                idTokoAktifUrl = params.get('id');
+
+                if (!idTokoAktifUrl) {
+                    document.getElementById('loadingToko').innerText = "Toko tidak ditemukan.";
+                    return;
+                }
+
+                // 1. Ambil Data Toko
+                const { data: toko, error: errToko } = await supabaseClient
+                    .from('toko')
+                    .select('*')
+                    .eq('id', idTokoAktifUrl)
+                    .single();
+
+                if (errToko || !toko) throw new Error("Toko tidak terdaftar.");
+
+                // Render Informasi Toko
+                document.getElementById('namaToko').innerText = toko.nama_toko;
+                document.getElementById('kategoriToko').innerText = toko.kategori_usaha || 'Umum';
+                document.getElementById('alamatLengkap').innerText = toko.alamat_lengkap || 'Alamat tidak dicantumkan';
+                document.getElementById('wilayahToko').innerText = `${toko.desa || ''}, Kec. ${toko.kecamatan || ''}`;
+                document.getElementById('jamOperasional').innerText = toko.buka_setiap_hari ? 'Buka Setiap Hari' : (toko.jam_buka ? `${toko.jam_buka} - ${toko.jam_tutup}` : '08.00 - 20.00');
+                document.getElementById('deskripsiToko').innerText = toko.deskripsi_toko || 'Belum ada deskripsi toko.';
+
+                // Banner & Logo
+                if (toko.banner_toko) {
+                    document.getElementById('bannerToko').src = toko.banner_toko;
+                    document.getElementById('bannerToko').classList.remove('hidden');
+                    document.getElementById('bannerPlaceholder').classList.add('hidden');
+                }
+                if (toko.logo_toko) {
+                    document.getElementById('logoToko').src = toko.logo_toko;
+                    document.getElementById('logoToko').classList.remove('hidden');
+                    document.getElementById('logoPlaceholder').classList.add('hidden');
+                }
+
+                // WhatsApp
+                const btnWa = document.getElementById('btnChatWa');
+                btnWa.href = `https://wa.me/${toko.no_whatsapp}?text=Halo%20${encodeURIComponent(toko.nama_toko)},%20saya%20tertarik%20dengan%20produk%20Anda.`;
+
+                // Cek Apakah yang Login adalah Pemilik Toko Ini
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user && user.id === toko.user_id) {
+                    document.getElementById('panelPemilikToko').classList.remove('hidden');
+                }
+
+                // 2. Ambil Produk Toko
+                const { data: produkData, error: errProd } = await supabaseClient
+                    .from('produk')
+                    .select('*')
+                    .eq('toko_id', idTokoAktifUrl)
+                    .order('created_at', { ascending: false });
+
+                if (errProd) throw errProd;
+
+                semuaProdukList = produkData || [];
+                document.getElementById('statTotalProduk').innerText = semuaProdukList.length;
+
+                document.getElementById('loadingToko').classList.add('hidden');
+                document.getElementById('wrapperProfilToko').classList.remove('hidden');
+
+                tampilkanProduk(semuaProdukList);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingToko').innerText = "Gagal memuat profil toko.";
+            }
+        }
+
+        function tampilkanProduk(data) {
+            const grid = document.getElementById('gridProduk');
+            const kosong = document.getElementById('kosongProduk');
+            grid.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                kosong.classList.remove('hidden');
+                return;
+            }
+            kosong.classList.add('hidden');
+
+            data.forEach(p => {
+                const hrgDiskon = p.harga_diskon || 0;
+                const hrgNormal = p.harga_normal || p.harga || 0;
+                const hrgTampil = hrgDiskon > 0 ? hrgDiskon : hrgNormal;
+                const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hrgTampil);
+                const fotoTampil = p.foto1 || p.foto_url || 'https://via.placeholder.com/300x200?text=Tanpa+Foto';
+
+                grid.innerHTML += `
+                    <div onclick="window.location.href='detail.html?id=${p.id}'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col justify-between hover:border-green-300 relative">
+                        <div class="h-36 bg-gray-100 relative">
+                            <img src="${fotoTampil}" alt="${p.nama_produk}" class="w-full h-full object-cover">
+                            ${hrgDiskon > 0 ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">DISKON</div>` : ''}
+                        </div>
+                        <div class="p-3 flex flex-col flex-grow">
+                            <h4 class="font-bold text-gray-800 text-xs line-clamp-2 mb-2">${p.nama_produk}</h4>
+                            <div class="mt-auto">
+                                <p class="font-black text-green-600 text-sm">${hargaFmt}</p>
+                                ${hrgDiskon > 0 ? `<p class="text-[10px] text-gray-400 line-through">Rp${hrgNormal.toLocaleString('id-ID')}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterProduk() {
+            const keyword = document.getElementById('cariProduk').value.toLowerCase();
+            const hasil = semuaProdukList.filter(p => p.nama_produk.toLowerCase().includes(keyword));
+            tampilkanProduk(hasil);
+        }
+
+        // FUNGSI KIRIM ULASAN (SIMULASI DINAMIS)
+        function kirimUlasan(event) {
+            event.preventDefault();
+            const nama = document.getElementById('ulasanNama').value;
+            const bintang = parseInt(document.getElementById('ulasanBintang').value);
+            const komentar = document.getElementById('ulasanKomentar').value;
+            
+            const daftar = document.getElementById('daftarUlasan');
+            
+            if(daftar.innerHTML.includes('Belum ada ulasan')) { daftar.innerHTML = ''; }
+
+            const bintangHtml = '⭐'.repeat(bintang);
+            const tanggal = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const htmlUlasanBaru = `
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="font-black text-gray-800">${nama}</span>
+                        <span class="text-amber-500 text-sm">${bintangHtml}</span>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed">"${komentar}"</p>
+                    <div class="text-[10px] text-gray-400 text-right">${tanggal}</div>
+                </div>
+            `;
+            
+            daftar.insertAdjacentHTML('afterbegin', htmlUlasanBaru);
+            document.getElementById('formUlasan').reset();
+            alert("Terima kasih! Ulasan Anda berhasil dikirim.");
+        }
+
+        function bagikanToko() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link profil toko berhasil disalin!");
+        }
+
+        muatHalamanToko();
+    </script>
+</body>
+</html>

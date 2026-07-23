@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Toko - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-20">
+
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-indigo-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">⚙️</div>
+                <span class="text-xl font-black text-indigo-900 tracking-tight hidden sm:block">PANEL<span class="text-indigo-500">PENJUAL</span></span>
+            </a>
+            <div class="flex gap-3">
+                <a href="index.html" class="text-xs font-bold text-gray-500 hover:text-indigo-600 transition bg-gray-100 px-3 py-1.5 rounded-lg">← Beranda Utama</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        
+        <div id="loadingDashboard" class="text-center py-20 text-gray-400 font-bold text-sm">Memuat data toko Anda...</div>
+
+        <div id="pesanBelumAdaToko" class="hidden bg-white p-10 text-center rounded-3xl shadow-sm border border-gray-200">
+            <h2 class="text-2xl font-black text-gray-800 mb-2">Anda Belum Membuka Toko</h2>
+            <p class="text-gray-500 text-sm mb-6">Silakan daftar sebagai penjual terlebih dahulu untuk mulai berjualan di Lokal Shop.</p>
+            <a href="daftar-toko.html" class="bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-md">Buka Toko Sekarang</a>
+        </div>
+
+        <div id="wrapperDashboard" class="hidden">
+            
+            <div class="bg-gradient-to-r from-indigo-800 to-indigo-600 rounded-3xl p-6 text-white shadow-md flex justify-between items-center mb-6">
+                <div class="flex items-center gap-4">
+                    <img id="headerLogoToko" src="https://via.placeholder.com/100" class="w-14 h-14 rounded-full object-cover border-2 border-white/50 shadow-sm bg-white">
+                    <div>
+                        <h2 id="teksNamaToko" class="text-2xl font-black mb-1">Nama Toko</h2>
+                        <p class="text-indigo-200 text-xs">Pusat Pengelolaan Produk & Pesanan</p>
+                    </div>
+                </div>
+                <a id="btnLihatToko" href="#" target="_blank" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-xl transition border border-white/30 backdrop-blur-sm hidden sm:block">
+                    👁️ Lihat Profil Toko
+                </a>
+            </div>
+
+            <!-- TABS -->
+            <div class="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide border-b border-gray-200">
+                <button onclick="bukaTab('katalog')" id="btnTab-katalog" class="tab-btn active-tab bg-white text-indigo-700 border-b-2 border-indigo-600 font-black px-5 py-3 text-sm whitespace-nowrap transition">📦 Katalog Produk</button>
+                <button onclick="bukaTab('tambah')" id="btnTab-tambah" class="tab-btn text-gray-500 font-bold px-5 py-3 text-sm whitespace-nowrap hover:text-indigo-600 transition">➕ Tambah Produk Baru</button>
+                <button onclick="bukaTab('pesanan')" id="btnTab-pesanan" class="tab-btn text-gray-500 font-bold px-5 py-3 text-sm whitespace-nowrap hover:text-indigo-600 transition relative">📥 Pesanan Masuk</button>
+                <button onclick="bukaTab('profil')" id="btnTab-profil" class="tab-btn text-gray-500 font-bold px-5 py-3 text-sm whitespace-nowrap hover:text-indigo-600 transition">⚙️ Profil Toko Lengkap</button>
+            </div>
+
+            <!-- TAB 1: KATALOG PRODUK -->
+            <div id="tab-katalog" class="tab-konten space-y-4 animate-fadeIn">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                        <h3 class="font-black text-lg text-gray-800">Daftar Produk Anda</h3>
+                        <button onclick="bukaTab('tambah')" class="bg-indigo-50 text-indigo-600 font-bold text-xs px-3 py-1.5 rounded-lg border border-indigo-200">+ Tambah</button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="bg-gray-50 text-xs text-gray-500 border-b">
+                                    <th class="p-3 font-bold">Produk & Foto</th>
+                                    <th class="p-3 font-bold">Harga</th>
+                                    <th class="p-3 font-bold">Stok</th>
+                                    <th class="p-3 font-bold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelProdukSaya" class="text-sm">
+                                <tr><td colspan="4" class="text-center py-6 text-gray-400 text-xs">Memuat data produk...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: TAMBAH PRODUK BARU DENGAN UPLOAD -->
+            <div id="tab-tambah" class="tab-konten hidden animate-fadeIn">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 max-w-2xl mx-auto">
+                    <h3 class="font-black text-lg text-gray-800 mb-1">Tambah Produk Baru</h3>
+                    <p class="text-xs text-gray-500 mb-6 border-b pb-4">Gunakan foto asli dari galeri perangkat Anda untuk menarik minat pembeli.</p>
+                    
+                    <form id="formTambahProduk" onsubmit="simpanProdukBaru(event)" class="space-y-5">
+                        <div class="space-y-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Produk <span class="text-red-500">*</span></label>
+                                <input type="text" id="addNama" required placeholder="Contoh: Kripik Pisang Manis" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Kategori <span class="text-red-500">*</span></label>
+                                    <select id="addKategori" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                                        <option value="Makanan & Minuman">Makanan & Minuman</option>
+                                        <option value="Sembako">Sembako</option>
+                                        <option value="Fashion">Fashion</option>
+                                        <option value="Jasa">Jasa</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Stok Barang <span class="text-red-500">*</span></label>
+                                    <input type="number" id="addStok" required min="1" value="10" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Harga Normal (Rp) <span class="text-red-500">*</span></label>
+                                <input type="number" id="addHargaNormal" required min="0" placeholder="15000" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Harga Diskon (Opsional)</label>
+                                <input type="number" id="addHargaDiskon" min="0" placeholder="Kosongkan jika tidak diskon" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- BAGIAN UPLOAD FOTO -->
+                        <div class="space-y-4 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+                            <div class="bg-indigo-100 text-indigo-800 text-[10px] p-2 rounded-lg font-bold mb-2">📸 Fitur Upload Gambar (Maksimal 2MB per gambar)</div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Foto Utama Produk <span class="text-red-500">*</span></label>
+                                <input type="file" id="addFoto1" accept="image/*" required class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer border border-gray-300 rounded-xl bg-white">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Foto Tambahan 1 (Opsional)</label>
+                                    <input type="file" id="addFoto2" accept="image/*" class="w-full text-sm file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 cursor-pointer border border-gray-300 rounded-xl bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Foto Tambahan 2 (Opsional)</label>
+                                    <input type="file" id="addFoto3" accept="image/*" class="w-full text-sm file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 cursor-pointer border border-gray-300 rounded-xl bg-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi Lengkap <span class="text-red-500">*</span></label>
+                            <textarea id="addDeskripsi" required rows="4" placeholder="Jelaskan rasa, ukuran, bahan, atau keunggulan produk..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></textarea>
+                        </div>
+
+                        <button type="submit" id="btnSimpanProduk" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl text-sm transition shadow-md">
+                            Unggah & Tampilkan Produk
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 3: PESANAN MASUK -->
+            <div id="tab-pesanan" class="tab-konten hidden animate-fadeIn space-y-4">
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl text-xs font-bold flex items-start gap-3 shadow-sm">
+                    <span class="text-xl">⚠️</span>
+                    <p><strong>PENTING:</strong> Segera klik <strong>"Konfirmasi"</strong> jika Anda telah menerima pesanan dari WhatsApp. Status yang Anda ubah di sini akan langsung terlihat oleh pembeli di akun mereka.</p>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-black text-lg text-gray-800 mb-4 border-b pb-4">Riwayat & Daftar Pesanan</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[750px]">
+                            <thead>
+                                <tr class="bg-gray-50 text-xs text-gray-500 border-b">
+                                    <th class="p-3 font-bold">Pemesan / Alamat</th>
+                                    <th class="p-3 font-bold">Produk (Qty)</th>
+                                    <th class="p-3 font-bold">Total Bayar</th>
+                                    <th class="p-3 font-bold text-center">Status</th>
+                                    <th class="p-3 font-bold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelPesanan" class="text-sm">
+                                <tr><td colspan="5" class="text-center py-6 text-gray-400 text-xs">Memuat pesanan masuk...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: PROFIL TOKO LENGKAP -->
+            <div id="tab-profil" class="tab-konten hidden animate-fadeIn">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 max-w-2xl mx-auto">
+                    <h3 class="font-black text-lg text-gray-800 mb-6 border-b pb-4">Lengkapi Identitas Toko</h3>
+                    
+                    <form id="formUpdateToko" onsubmit="updateProfilToko(event)" class="space-y-4">
+                        
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-4">
+                            <div><label class="block text-xs font-bold mb-1">Nama Toko</label><input type="text" id="editNamaToko" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold mb-1">Kategori Usaha</label><input type="text" id="editKategoriToko" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                                <div><label class="block text-xs font-bold mb-1">No WhatsApp Aktif</label><input type="number" id="editWaToko" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                            </div>
+                        </div>
+
+                        <!-- UPLOAD LOGO & BANNER TOKO -->
+                        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-2">Upload Logo Toko (Baru)</label>
+                                <img id="previewLogo" src="https://via.placeholder.com/150" class="w-16 h-16 rounded-xl object-cover mb-2 border border-gray-200 shadow-sm">
+                                <input type="file" id="editLogo" accept="image/*" class="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer border border-gray-300 rounded-lg bg-white">
+                                <p class="text-[9px] text-gray-400 mt-1">*Biarkan kosong jika tidak ingin ganti logo</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-2">Upload Banner Toko (Baru)</label>
+                                <img id="previewBanner" src="https://via.placeholder.com/300x100" class="w-full h-16 rounded-xl object-cover mb-2 border border-gray-200 shadow-sm">
+                                <input type="file" id="editBanner" accept="image/*" class="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer border border-gray-300 rounded-lg bg-white">
+                                <p class="text-[9px] text-gray-400 mt-1">*Biarkan kosong jika tidak ingin ganti banner</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-4">
+                            <div><label class="block text-xs font-bold mb-1">Alamat Lengkap</label><textarea id="editAlamatToko" rows="2" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></textarea></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold mb-1">Desa</label><input type="text" id="editDesa" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                                <div><label class="block text-xs font-bold mb-1">Kecamatan</label><input type="text" id="editKecamatan" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 pt-2">
+                                <div><label class="block text-xs font-bold mb-1">Jam Buka</label><input type="time" id="editJamBuka" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                                <div><label class="block text-xs font-bold mb-1">Jam Tutup</label><input type="time" id="editJamTutup" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                                <div class="flex items-center pt-5">
+                                    <label class="flex items-center gap-2 text-xs font-bold cursor-pointer text-gray-700">
+                                        <input type="checkbox" id="editBukaTiapHari" class="w-4 h-4 text-indigo-600 rounded"> Buka Tiap Hari
+                                    </label>
+                                </div>
+                            </div>
+                            <div><label class="block text-xs font-bold mb-1">URL Google Maps (Opsional)</label><input type="url" id="editMaps" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></div>
+                        </div>
+
+                        <div><label class="block text-xs font-bold mb-1">Deskripsi / Slogan Toko</label><textarea id="editDeskripsiToko" rows="3" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500"></textarea></div>
+                        
+                        <button type="submit" id="btnSimpanProfil" class="w-full bg-gray-800 hover:bg-black text-white font-black py-4 rounded-xl text-sm transition shadow-md mt-4">
+                            Simpan Perubahan Profil
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        // ----------------------------
+
+        let akunUser = null;
+        let dataTokoSaya = null;
+
+        // FUNGSI UPLOAD FILE KE STORAGE SUPABASE
+        async function uploadGambarKeSupabase(inputId, folderName) {
+            const fileInput = document.getElementById(inputId);
+            const file = fileInput.files[0];
+            
+            if (!file) return null; // Jika tidak ada file yang dipilih
+
+            // Generate nama file unik agar tidak bentrok
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+            const filePath = `${folderName}/${fileName}`;
+
+            // Upload ke bucket bernama 'lokalshop-storage'
+            const { error: uploadError } = await supabaseClient.storage
+                .from('lokalshop-storage')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error("Gagal upload gambar:", uploadError);
+                throw new Error("Gagal mengunggah gambar. Pastikan Bucket 'lokalshop-storage' sudah Public.");
+            }
+
+            // Ambil URL Publiknya
+            const { data } = supabaseClient.storage.from('lokalshop-storage').getPublicUrl(filePath);
+            return data.publicUrl;
+        }
+
+        // SISTEM TAB NAVIGASI
+        function bukaTab(namaTab) {
+            document.querySelectorAll('.tab-konten').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-indigo-700', 'border-b-2', 'border-indigo-600', 'bg-white');
+                btn.classList.add('text-gray-500');
+            });
+            document.getElementById(`tab-${namaTab}`).classList.remove('hidden');
+            const btnAktif = document.getElementById(`btnTab-${namaTab}`);
+            btnAktif.classList.remove('text-gray-500');
+            btnAktif.classList.add('text-indigo-700', 'border-b-2', 'border-indigo-600', 'bg-white');
+        }
+
+        // CEK LOGIN & MUAT DATA AWAL
+        async function inisialisasiDashboard() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) { window.location.href = "login.html"; return; }
+                akunUser = user;
+
+                const { data: toko, error } = await supabaseClient.from('toko').select('*').eq('user_id', user.id).single();
+                document.getElementById('loadingDashboard').classList.add('hidden');
+
+                if (error || !toko) {
+                    document.getElementById('pesanBelumAdaToko').classList.remove('hidden');
+                } else {
+                    dataTokoSaya = toko;
+                    document.getElementById('wrapperDashboard').classList.remove('hidden');
+                    
+                    document.getElementById('teksNamaToko').innerText = toko.nama_toko;
+                    document.getElementById('btnLihatToko').href = `toko.html?id=${toko.id}`;
+                    
+                    if(toko.logo_toko) {
+                        document.getElementById('headerLogoToko').src = toko.logo_toko;
+                        document.getElementById('previewLogo').src = toko.logo_toko;
+                    }
+                    if(toko.banner_toko) {
+                        document.getElementById('previewBanner').src = toko.banner_toko;
+                    }
+
+                    // Isi form profil
+                    document.getElementById('editNamaToko').value = toko.nama_toko || '';
+                    document.getElementById('editKategoriToko').value = toko.kategori_usaha || '';
+                    document.getElementById('editWaToko').value = toko.no_whatsapp || '';
+                    document.getElementById('editAlamatToko').value = toko.alamat_lengkap || '';
+                    document.getElementById('editDesa').value = toko.desa || '';
+                    document.getElementById('editKecamatan').value = toko.kecamatan || '';
+                    document.getElementById('editJamBuka').value = toko.jam_buka || '';
+                    document.getElementById('editJamTutup').value = toko.jam_tutup || '';
+                    document.getElementById('editBukaTiapHari').checked = toko.buka_setiap_hari || false;
+                    document.getElementById('editMaps').value = toko.maps_url || '';
+                    document.getElementById('editDeskripsiToko').value = toko.deskripsi_toko || '';
+
+                    muatKatalogProduk();
+                    muatPesananMasuk();
+                }
+            } catch (err) { console.error("Gagal inisialisasi:", err); }
+        }
+
+        // MUAT KATALOG PRODUK
+        async function muatKatalogProduk() {
+            const tabel = document.getElementById('tabelProdukSaya');
+            tabel.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-xs text-gray-400">Memuat data...</td></tr>';
+            
+            try {
+                const { data: produk, error } = await supabaseClient
+                    .from('produk')
+                    .select('*')
+                    .eq('toko_id', dataTokoSaya.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (produk.length === 0) {
+                    tabel.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-xs text-gray-500">Anda belum memiliki produk.</td></tr>';
+                    return;
+                }
+
+                tabel.innerHTML = '';
+                produk.forEach(p => {
+                    const hrg = p.harga_diskon > 0 ? p.harga_diskon : (p.harga_normal || p.harga || 0);
+                    const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hrg);
+                    const foto = p.foto1 || p.foto_url || 'https://via.placeholder.com/50';
+
+                    tabel.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 flex items-center gap-3">
+                                <img src="${foto}" class="w-10 h-10 object-cover rounded-lg border">
+                                <div>
+                                    <p class="font-bold text-gray-800 text-xs">${p.nama_produk}</p>
+                                    <p class="text-[10px] text-gray-400">${p.kategori || '-'}</p>
+                                </div>
+                            </td>
+                            <td class="p-3 text-xs font-black text-green-600">${hargaFmt}</td>
+                            <td class="p-3 text-xs">${p.stok || 0}</td>
+                            <td class="p-3 text-center">
+                                <button onclick="hapusProduk('${p.id}')" class="text-red-500 hover:text-white bg-red-50 hover:bg-red-500 text-[11px] font-bold px-3 py-1.5 rounded transition">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) { console.error("Gagal muat katalog"); }
+        }
+
+        // SIMPAN PRODUK BARU (DENGAN UPLOAD GAMBAR OTOMATIS)
+        async function simpanProdukBaru(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSimpanProduk');
+            btn.innerText = "Mengunggah Gambar & Menyimpan...";
+            btn.disabled = true;
+
+            try {
+                // 1. Upload Gambar dulu
+                const urlFoto1 = await uploadGambarKeSupabase('addFoto1', 'produk');
+                const urlFoto2 = await uploadGambarKeSupabase('addFoto2', 'produk');
+                const urlFoto3 = await uploadGambarKeSupabase('addFoto3', 'produk');
+
+                if (!urlFoto1) throw new Error("Foto utama wajib diupload.");
+
+                // 2. Simpan Data ke Database
+                const nama = document.getElementById('addNama').value;
+                const kategori = document.getElementById('addKategori').value;
+                const stok = document.getElementById('addStok').value;
+                const hNormal = document.getElementById('addHargaNormal').value;
+                const hDiskon = document.getElementById('addHargaDiskon').value || null;
+                const deskripsi = document.getElementById('addDeskripsi').value;
+
+                const { error } = await supabaseClient.from('produk').insert([{
+                    toko_id: dataTokoSaya.id,
+                    nama_produk: nama,
+                    kategori: kategori,
+                    stok: parseInt(stok),
+                    harga_normal: parseFloat(hNormal),
+                    harga_diskon: hDiskon ? parseFloat(hDiskon) : null,
+                    deskripsi: deskripsi,
+                    foto1: urlFoto1, // Disimpan otomatis sebagai URL Supabase
+                    foto2: urlFoto2,
+                    foto3: urlFoto3,
+                    status_tampil: 'Aktif'
+                }]);
+
+                if (error) throw error;
+
+                alert("Produk berhasil ditambahkan!");
+                document.getElementById('formTambahProduk').reset();
+                muatKatalogProduk(); 
+                bukaTab('katalog'); 
+
+            } catch (err) {
+                console.error("Gagal simpan produk:", err);
+                alert(err.message || "Terjadi kesalahan saat menyimpan produk.");
+            } finally {
+                btn.innerText = "Unggah & Tampilkan Produk";
+                btn.disabled = false;
+            }
+        }
+
+        // HAPUS PRODUK
+        async function hapusProduk(idProduk) {
+            if (!confirm("Yakin ingin menghapus produk ini?")) return;
+            try {
+                const { error } = await supabaseClient.from('produk').delete().eq('id', idProduk);
+                if (error) throw error;
+                muatKatalogProduk();
+            } catch (err) { alert("Gagal menghapus produk."); }
+        }
+
+        // MUAT PESANAN MASUK
+        async function muatPesananMasuk() {
+            const tabel = document.getElementById('tabelPesanan');
+            tabel.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-xs text-gray-400">Memuat pesanan...</td></tr>';
+            
+            try {
+                const { data: pesananList, error } = await supabaseClient
+                    .from('pesanan')
+                    .select('*, produk(nama_produk)')
+                    .eq('toko_id', dataTokoSaya.id)
+                    .order('created_at', { ascending: false });
+
+                if (error || pesananList.length === 0) {
+                    tabel.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-xs text-gray-500 font-bold">Horee! Belum ada pesanan yang perlu diurus.</td></tr>';
+                    return;
+                }
+
+                tabel.innerHTML = '';
+                pesananList.forEach(p => {
+                    const totalFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.total_harga);
+                    const namaProd = p.produk ? p.produk.nama_produk : 'Produk Dihapus';
+                    
+                    let warnaStatus = 'bg-gray-100 text-gray-700';
+                    let tombolAksi = '';
+                    
+                    if (p.status === 'Menunggu Konfirmasi') {
+                        warnaStatus = 'bg-amber-100 text-amber-700 border border-amber-300 animate-pulse';
+                        tombolAksi = `
+                            <button onclick="ubahStatusPesanan('${p.id}', 'Diproses')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold w-full mb-1 transition">Konfirmasi (Sanggup)</button>
+                            <button onclick="ubahStatusPesanan('${p.id}', 'Dibatalkan')" class="bg-red-50 hover:bg-red-500 hover:text-white text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-bold w-full border border-red-100 transition">Batalkan Pesanan</button>`;
+                    } else if (p.status === 'Diproses') {
+                        warnaStatus = 'bg-blue-100 text-blue-700';
+                        tombolAksi = `<button onclick="ubahStatusPesanan('${p.id}', 'Selesai')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold w-full transition">Tandai Selesai & Diterima</button>`;
+                    } else if (p.status === 'Selesai') {
+                        warnaStatus = 'bg-green-100 text-green-700';
+                        tombolAksi = `<span class="text-[10px] font-bold text-green-600">Transaksi Selesai (Fee 1% Tercatat)</span>`;
+                    } else if (p.status === 'Dibatalkan') {
+                        warnaStatus = 'bg-red-100 text-red-700';
+                        tombolAksi = `<span class="text-[10px] font-bold text-red-500">Transaksi Dibatalkan</span>`;
+                    }
+
+                    tabel.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3">
+                                <p class="font-bold text-gray-800 text-xs">${p.nama_pembeli}</p>
+                                <p class="text-[10px] text-gray-500 mt-1 line-clamp-2 max-w-[150px]">${p.alamat}</p>
+                            </td>
+                            <td class="p-3">
+                                <p class="text-xs font-bold text-indigo-700">${namaProd}</p>
+                                <p class="text-[10px] font-bold text-gray-500">Jumlah: ${p.qty} pcs</p>
+                                <p class="text-[9px] text-gray-400 mt-1 italic">" ${p.catatan || '-'} "</p>
+                            </td>
+                            <td class="p-3 text-sm font-black text-green-600">${totalFmt}</td>
+                            <td class="p-3 text-center">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold inline-block ${warnaStatus}">${p.status}</span>
+                            </td>
+                            <td class="p-3 text-center align-middle w-40">
+                                ${tombolAksi}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {}
+        }
+
+        // UBAH STATUS PESANAN
+        async function ubahStatusPesanan(idPesanan, statusBaru) {
+            const konfirmasi = confirm(`Anda yakin ingin mengubah status pesanan ini menjadi "${statusBaru}"?`);
+            if (!konfirmasi) return;
+
+            try {
+                const { error } = await supabaseClient.from('pesanan').update({ status: statusBaru }).eq('id', idPesanan);
+                if (error) throw error;
+                muatPesananMasuk(); 
+            } catch (err) { alert("Gagal mengubah status pesanan."); }
+        }
+
+        // UPDATE PROFIL TOKO LENGKAP (DENGAN UPLOAD LOGO & BANNER)
+        async function updateProfilToko(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSimpanProfil');
+            btn.innerText = "Mengunggah Gambar & Menyimpan...";
+            btn.disabled = true;
+            
+            try {
+                // Cek apakah user mengupload gambar baru
+                const urlLogoBaru = await uploadGambarKeSupabase('editLogo', 'toko') || dataTokoSaya.logo_toko;
+                const urlBannerBaru = await uploadGambarKeSupabase('editBanner', 'toko') || dataTokoSaya.banner_toko;
+
+                const updates = {
+                    nama_toko: document.getElementById('editNamaToko').value,
+                    kategori_usaha: document.getElementById('editKategoriToko').value,
+                    no_whatsapp: document.getElementById('editWaToko').value,
+                    alamat_lengkap: document.getElementById('editAlamatToko').value,
+                    logo_toko: urlLogoBaru,
+                    banner_toko: urlBannerBaru,
+                    desa: document.getElementById('editDesa').value,
+                    kecamatan: document.getElementById('editKecamatan').value,
+                    jam_buka: document.getElementById('editJamBuka').value,
+                    jam_tutup: document.getElementById('editJamTutup').value,
+                    buka_setiap_hari: document.getElementById('editBukaTiapHari').checked,
+                    maps_url: document.getElementById('editMaps').value,
+                    deskripsi_toko: document.getElementById('editDeskripsiToko').value
+                };
+
+                const { error } = await supabaseClient.from('toko').update(updates).eq('id', dataTokoSaya.id);
+                if (error) throw error;
+                
+                alert("Profil toko berhasil diperbarui secara menyeluruh!");
+                
+                // Update UI lokal
+                document.getElementById('teksNamaToko').innerText = updates.nama_toko;
+                if(urlLogoBaru) {
+                    document.getElementById('headerLogoToko').src = urlLogoBaru;
+                    document.getElementById('previewLogo').src = urlLogoBaru;
+                }
+                if(urlBannerBaru) { document.getElementById('previewBanner').src = urlBannerBaru; }
+                
+                // Perbarui data variabel
+                dataTokoSaya = { ...dataTokoSaya, ...updates };
+
+            } catch (err) {
+                alert(err.message || "Gagal mengupdate profil.");
+            } finally {
+                btn.innerText = "Simpan Perubahan Profil";
+                btn.disabled = false;
+            }
+        }
+
+        inisialisasiDashboard();
+    </script>
+</body>
+</html>

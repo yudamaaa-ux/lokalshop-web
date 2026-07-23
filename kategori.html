@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategori Produk - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Sembunyikan scrollbar tapi tetap bisa di-scroll (khusus pengguna HP) */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col">
+
+    <!-- NAVIGASI ATAS -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition">
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-green-600 text-white flex items-center justify-center rounded-xl font-black text-sm md:text-xl shadow-md">LS</div>
+                <span class="text-xl md:text-2xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
+            </a>
+            
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-xs font-bold text-gray-500 hover:text-green-600 transition bg-gray-100 px-4 py-2 rounded-xl">🏠 Beranda Utama</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow flex flex-col md:flex-row gap-6">
+        
+        <!-- SIDEBAR KIRI (DAFTAR KATEGORI) -->
+        <aside class="w-full md:w-1/4 lg:w-1/5 md:sticky md:top-20 md:h-[calc(100vh-6rem)] flex flex-col">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-5 flex flex-col h-full">
+                <h2 class="font-black text-gray-800 text-lg mb-4 flex items-center gap-2">
+                    <span>📑</span> Kategori
+                </h2>
+                
+                <!-- List Kategori (Bisa di-scroll horizontal di HP, Vertical di Laptop) -->
+                <div id="wadahKategori" class="flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto pb-2 md:pb-0 scrollbar-hide md:pr-2">
+                    <!-- Kategori akan dirender oleh JavaScript di sini -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- KONTEN KANAN (PRODUK & FILTER) -->
+        <section class="w-full md:w-3/4 lg:w-4/5 flex flex-col">
+            
+            <!-- HEADER PENCARIAN & SORTING -->
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-col lg:flex-row gap-4 items-center justify-between">
+                
+                <div class="w-full lg:w-1/2 relative">
+                    <input type="text" id="kolomCari" onkeyup="terapkanFilter()" placeholder="Cari nama produk, makanan, atau jasa..." class="w-full border border-gray-300 rounded-2xl pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 focus:bg-white transition shadow-sm">
+                    <span class="absolute left-4 top-3.5 text-gray-400 text-lg">🔍</span>
+                </div>
+
+                <div class="w-full lg:w-auto flex items-center gap-3">
+                    <label class="text-xs font-bold text-gray-500 whitespace-nowrap">Urutkan:</label>
+                    <select id="kolomUrut" onchange="terapkanFilter()" class="w-full lg:w-48 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 cursor-pointer shadow-sm font-bold text-gray-700">
+                        <option value="terbaru">✨ Paling Baru</option>
+                        <option value="termurah">💸 Harga Termurah</option>
+                        <option value="termahal">💎 Harga Termahal</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- JUDUL KATEGORI AKTIF -->
+            <div class="mb-6 flex items-center justify-between">
+                <h1 id="judulKategoriAktif" class="text-2xl font-black text-gray-800">Semua Produk</h1>
+                <span id="totalProdukInfo" class="bg-green-100 text-green-700 font-bold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">Menghitung...</span>
+            </div>
+
+            <!-- WADAH GRID PRODUK -->
+            <div id="loadingKatalog" class="text-center py-20 text-gray-400 font-bold text-sm">Sedang mencari produk terbaik...</div>
+            
+            <div id="gridKatalog" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 hidden">
+                <!-- Produk dirender di sini oleh JS -->
+            </div>
+
+            <!-- WADAH KOSONG (JIKA PRODUK TIDAK DITEMUKAN) -->
+            <div id="katalogKosong" class="hidden flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-dashed border-gray-300">
+                <span class="text-6xl mb-4">🏜️</span>
+                <h3 class="text-xl font-black text-gray-800 mb-2">Produk Tidak Ditemukan</h3>
+                <p class="text-gray-500 text-sm max-w-sm">Maaf, belum ada produk dalam kategori ini atau kata kunci pencarian Anda tidak cocok.</p>
+                <button onclick="pilihKategori('Semua Produk')" class="mt-6 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition shadow-md">
+                    Lihat Semua Produk
+                </button>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        // ----------------------------
+
+        // DATABASE LOKAL JAVASCRIPT UNTUK MEMPERCEPAT FILTERING
+        let semuaProdukSistem = [];
+        let kategoriAktif = 'Semua Produk';
+
+        // DAFTAR KATEGORI LENGKAP & CERDAS
+        const daftarKategori = [
+            { id: 'Semua Produk', ikon: '🌟', nama: 'Semua Produk' },
+            { id: 'Sembako & Kebutuhan Pokok', ikon: '🌾', nama: 'Sembako & Kebutuhan Pokok' },
+            { id: 'Makanan & Minuman Olahan', ikon: '🍜', nama: 'Makanan & Minuman Olahan' },
+            { id: 'Sayur, Buah & Daging Segar', ikon: '🥦', nama: 'Sayur, Buah & Daging Segar' },
+            { id: 'Pakaian & Fashion Wanita', ikon: '👗', nama: 'Pakaian & Fashion Wanita' },
+            { id: 'Pakaian & Fashion Pria', ikon: '👔', nama: 'Pakaian & Fashion Pria' },
+            { id: 'Kesehatan & Kecantikan', ikon: '💄', nama: 'Kesehatan & Kecantikan' },
+            { id: 'Ibu, Bayi & Anak', ikon: '👶', nama: 'Ibu, Bayi & Anak' },
+            { id: 'Perabotan & Alat Rumah Tangga', ikon: '🛋️', nama: 'Perabotan & Alat Rumah Tangga' },
+            { id: 'Elektronik & Gadget', ikon: '📱', nama: 'Elektronik & Gadget' },
+            { id: 'Bahan Bangunan & Perkakas', ikon: '🔨', nama: 'Bahan Bangunan & Perkakas' },
+            { id: 'Otomotif & Aksesoris', ikon: '🏍️', nama: 'Otomotif & Aksesoris' },
+            { id: 'Olahraga & Hobi', ikon: '⚽', nama: 'Olahraga & Hobi' },
+            { id: 'Hewan Peliharaan', ikon: '🐾', nama: 'Hewan Peliharaan' },
+            { id: 'Jasa & Layanan Profesional', ikon: '🔧', nama: 'Jasa & Layanan Profesional' },
+            { id: 'Produk Kerajinan / Kesenian Lokal', ikon: '🎨', nama: 'Produk Kerajinan Lokal' },
+            { id: 'Lainnya', ikon: '📦', nama: 'Lainnya...' }
+        ];
+
+        // 1. FUNGSI MERENDER MENU KATEGORI KE LAYAR
+        function renderMenuKategori() {
+            const wadah = document.getElementById('wadahKategori');
+            wadah.innerHTML = '';
+            
+            daftarKategori.forEach(kat => {
+                // Desain tombol berubah tergantung apakah ini kategori yang sedang aktif
+                const isAktif = kategoriAktif === kat.id;
+                const classBtn = isAktif 
+                    ? 'bg-green-600 text-white font-black shadow-md transform scale-[1.02]' 
+                    : 'bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-700 font-bold border border-transparent hover:border-green-200';
+                
+                wadah.innerHTML += `
+                    <button onclick="pilihKategori('${kat.id}')" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all whitespace-nowrap text-sm text-left flex-shrink-0 w-auto md:w-full ${classBtn}">
+                        <span class="text-lg">${kat.ikon}</span>
+                        <span>${kat.nama}</span>
+                    </button>
+                `;
+            });
+        }
+
+        // 2. FUNGSI SAAT TOMBOL KATEGORI DIKLIK
+        function pilihKategori(idKategori) {
+            kategoriAktif = idKategori;
+            document.getElementById('judulKategoriAktif').innerText = idKategori;
+            
+            // Ubah URL secara diam-diam agar jika di-refresh tetap di kategori ini
+            const urlBaru = new URL(window.location);
+            urlBaru.searchParams.set('kat', idKategori);
+            window.history.pushState({}, '', urlBaru);
+
+            renderMenuKategori(); // Refresh warna tombol
+            terapkanFilter();     // Saring produk
+        }
+
+        // 3. FUNGSI MENGAMBIL SEMUA DATA DARI SUPABASE
+        async function muatSemuaProduk() {
+            try {
+                // Baca Parameter URL (Jika pembeli mengeklik dari Beranda)
+                const urlParams = new URLSearchParams(window.location.search);
+                const kategoriDariUrl = urlParams.get('kat');
+                if (kategoriDariUrl) {
+                    kategoriAktif = kategoriDariUrl;
+                    document.getElementById('judulKategoriAktif').innerText = kategoriAktif;
+                }
+
+                renderMenuKategori();
+
+                // Tarik produk & info toko yang statusnya Aktif
+                const { data, error } = await supabaseClient
+                    .from('produk')
+                    .select('*, toko(id, nama_toko)')
+                    .eq('status_tampil', 'Aktif');
+
+                if (error) throw error;
+                
+                semuaProdukSistem = data || [];
+                
+                document.getElementById('loadingKatalog').classList.add('hidden');
+                terapkanFilter();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingKatalog').innerHTML = '<span class="text-red-500 font-bold">Gagal terhubung ke database. Cek koneksi Anda.</span>';
+            }
+        }
+
+        // 4. FUNGSI FILTERING (KATEGORI + PENCARIAN) & SORTING
+        function terapkanFilter() {
+            const kataKunci = document.getElementById('kolomCari').value.toLowerCase();
+            const tipeUrut = document.getElementById('kolomUrut').value;
+            
+            // A. Saring Berdasarkan Kategori & Kata Kunci
+            let produkTersaring = semuaProdukSistem.filter(p => {
+                const cocokKategori = (kategoriAktif === 'Semua Produk') || (p.kategori === kategoriAktif);
+                const namaAman = p.nama_produk ? p.nama_produk.toLowerCase() : '';
+                const cocokKataKunci = namaAman.includes(kataKunci);
+                return cocokKategori && cocokKataKunci;
+            });
+
+            // B. Proses Pengurutan (Sorting)
+            produkTersaring.sort((a, b) => {
+                // Tentukan harga akhir (Harga Diskon menang dari Harga Normal)
+                const hargaA = a.harga_diskon > 0 ? a.harga_diskon : (a.harga_normal || a.harga || 0);
+                const hargaB = b.harga_diskon > 0 ? b.harga_diskon : (b.harga_normal || b.harga || 0);
+
+                if (tipeUrut === 'termurah') {
+                    return hargaA - hargaB; // Naik
+                } else if (tipeUrut === 'termahal') {
+                    return hargaB - hargaA; // Turun
+                } else {
+                    // Default: Terbaru (Berdasarkan created_at)
+                    return new Date(b.created_at) - new Date(a.created_at);
+                }
+            });
+
+            // C. Tampilkan ke Layar
+            renderKatalogHTML(produkTersaring);
+        }
+
+        // 5. FUNGSI MERENDER HTML PRODUK KE GRID
+        function renderKatalogHTML(dataTersaring) {
+            const grid = document.getElementById('gridKatalog');
+            const kosong = document.getElementById('katalogKosong');
+            const infoTotal = document.getElementById('totalProdukInfo');
+            
+            grid.innerHTML = '';
+            infoTotal.innerText = `${dataTersaring.length} Produk Ditemukan`;
+
+            if (dataTersaring.length === 0) {
+                grid.classList.add('hidden');
+                kosong.classList.remove('hidden');
+                return;
+            }
+
+            grid.classList.remove('hidden');
+            kosong.classList.add('hidden');
+
+            dataTersaring.forEach(p => {
+                // Harga
+                const hrgDiskon = p.harga_diskon || 0;
+                const hrgNormal = p.harga_normal || p.harga || 0;
+                const hrgFix = hrgDiskon > 0 ? hrgDiskon : hrgNormal;
+                const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hrgFix);
+                
+                // Foto & Toko
+                const fotoTampil = p.foto1 || p.foto_url || 'https://via.placeholder.com/300x300?text=Tanpa+Foto';
+                const namaToko = p.toko ? p.toko.nama_toko : 'Toko Lokal';
+
+                // Badges
+                const badgeHabis = p.stok <= 0 ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-xs tracking-widest z-10 backdrop-blur-sm">HABIS</div>` : '';
+                const badgeDiskon = hrgDiskon > 0 ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-md z-10">DISKON</div>` : '';
+
+                grid.innerHTML += `
+                    <a href="detail.html?id=${p.id}" class="group block bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-green-300 transition-all duration-300 overflow-hidden flex flex-col h-full transform hover:-translate-y-1 relative">
+                        
+                        <!-- Area Gambar -->
+                        <div class="aspect-square bg-gray-100 relative overflow-hidden">
+                            <img src="${fotoTampil}" alt="${p.nama_produk}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            ${badgeDiskon}
+                            ${badgeHabis}
+                        </div>
+                        
+                        <!-- Area Detail -->
+                        <div class="p-3 flex flex-col flex-grow relative">
+                            <!-- Kategori Kecil -->
+                            <div class="text-[9px] font-bold text-green-600 mb-1 uppercase tracking-wider truncate">${p.kategori || 'Umum'}</div>
+                            
+                            <!-- Judul Produk -->
+                            <h3 class="font-bold text-gray-800 line-clamp-2 mb-1 text-xs group-hover:text-green-700 transition-colors">${p.nama_produk}</h3>
+                            
+                            <!-- Info Toko Mini -->
+                            <p class="text-[10px] text-gray-400 mb-2 truncate">🏪 ${namaToko}</p>
+                            
+                            <!-- Area Harga Bawah -->
+                            <div class="mt-auto pt-2 border-t border-gray-50">
+                                <div class="text-sm font-black text-gray-900">${hargaFmt}</div>
+                                ${hrgDiskon > 0 ? `<div class="text-[9px] text-gray-400 line-through mt-0.5">Rp${hrgNormal.toLocaleString('id-ID')}</div>` : '<div class="h-3"></div>'}
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+        }
+
+        // Jalankan saat halaman dibuka
+        muatSemuaProduk();
+
+    </script>
+</body>
+</html>

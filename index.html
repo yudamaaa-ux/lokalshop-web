@@ -1,96 +1,85 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <!-- NAVIGASI ATAS -->
-<nav class="bg-white shadow-sm sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-        <!-- Logo / Judul -->
-        <a href="index.html" class="flex items-center space-x-2">
-            <i class="fas fa-store text-green-600 text-2xl"></i>
-            <span class="text-xl font-extrabold text-green-700 tracking-tight">LOKAL SHOP</span>
-        </a>
-
-        <!-- Menu Kanan -->
-        <div class="flex items-center space-x-4">
-            <a href="daftar.html" class="hidden md:inline-block text-sm font-bold text-gray-600 hover:text-green-600 transition">Buka Toko</a>
-            <a href="tambah-produk.html" class="hidden md:inline-block text-sm font-bold text-gray-600 hover:text-green-600 transition">Tambah Menu</a>
-            
-            <!-- Tombol Keranjang (Biarkan seperti yang sudah ada di proyek Anda, sesuaikan id-nya jika perlu) -->
-            <button id="btnKeranjang" class="relative p-2 text-gray-700 hover:text-green-600 transition">
-                <i class="fas fa-shopping-cart text-xl"></i>
-                <span id="badgeKeranjang" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
-            </button>
-        </div>
-    </div>
-    <!-- Menu Mobile (Muncul di layar HP di bagian bawah Header) -->
-    <div class="md:hidden flex justify-around border-t p-2 bg-gray-50 text-xs font-bold text-gray-600">
-        <a href="index.html" class="hover:text-green-600 flex flex-col items-center"><i class="fas fa-home mb-1 text-lg"></i> Beranda</a>
-        <a href="daftar.html" class="hover:text-green-600 flex flex-col items-center"><i class="fas fa-store mb-1 text-lg"></i> Buka Toko</a>
-        <a href="tambah-produk.html" class="hover:text-green-600 flex flex-col items-center"><i class="fas fa-plus-square mb-1 text-lg"></i> Tambah</a>
-    </div>
-</nav>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOKAL SHOP - Belanja Mudah Untuk Warga Lokal</title>
-    <!-- Memanggil Tailwind CSS untuk desain (gratis & instan) -->
+    <title>LOKAL SHOP - Pasar Digital Trenggalek</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memanggil Font Awesome untuk ikon (keranjang, plus, dll) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-50 font-sans min-h-screen">
 
-
-    <!-- HEADER / BANNER -->
-    <header class="bg-green-600 text-white py-8 text-center">
-        <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-2xl md:text-3xl font-bold mb-2">Belanja Cepat dari Tetangga Sendiri</h2>
-            <p class="text-green-100">Dukung UMKM Kecamatan. Tanpa ribet daftar, langsung chat WA penjual!</p>
-        </div>
-    </header>
-
-    <!-- DAFTAR PRODUK -->
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        <h3 class="text-xl font-bold border-l-4 border-green-600 pl-3 mb-6">Produk Terbaru</h3>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="productGrid">
+    <!-- NAVIGASI UTAMA DENGAN LOGO -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-green-600 text-white flex items-center justify-center rounded-xl font-black text-xl shadow-md">LS</div>
+                <span class="text-2xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
+            </a>
             
-           
+            <div id="menuNavigasi" class="flex gap-3 items-center">
+                <span class="text-xs text-gray-400">Memuat...</span>
+            </div>
+        </div>
+    </nav>
 
+    <!-- AREA UTAMA -->
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        
+        <!-- BANNER BERANDA YANG LEBIH MENARIK -->
+        <div class="bg-gradient-to-r from-green-600 via-teal-600 to-green-700 rounded-3xl p-6 md:p-10 mb-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
+            <div class="relative z-10 space-y-3">
+                <span class="bg-white/20 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/30">Marketplace Kecamatan</span>
+                <h2 class="text-3xl md:text-4xl font-black leading-tight">Belanja Mudah<br>dari Tetangga Sendiri!</h2>
+                <p class="text-green-50 text-sm max-w-md">Dukung UMKM lokal. Temukan produk, makanan, dan jasa terbaik langsung dari warga di sekitar Anda dengan harga jujur.</p>
+                <div class="pt-2">
+                    <a href="kategori.html" class="inline-block bg-white text-green-700 font-black text-xs px-5 py-2.5 rounded-xl shadow-md hover:bg-green-50 transition">
+                        Mulai Belanja 🛍️
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:block text-8xl relative z-10 drop-shadow-xl">🛒</div>
+            <!-- Dekorasi background -->
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
+        </div>
+
+        <!-- KATEGORI CEPAT (SUDAH DIKONEKSIKAN KE KATEGORI.HTML) -->
+        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm mb-6 border border-gray-100">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                <h3 class="text-sm font-black text-gray-800">Pilihan Kategori</h3>
+                <a href="kategori.html" class="text-[10px] font-bold text-green-600 hover:text-green-800 hover:underline transition">Lihat Semua Kategori ➡️</a>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="kategori.html" class="px-4 py-2 bg-gray-50 hover:bg-green-100 border border-gray-200 text-gray-700 hover:text-green-700 hover:border-green-300 text-xs font-bold rounded-xl transition shadow-sm">🌟 Semua</a>
+                <a href="kategori.html?kat=Makanan & Minuman Olahan" class="px-4 py-2 bg-gray-50 hover:bg-green-100 border border-gray-200 text-gray-700 hover:text-green-700 hover:border-green-300 text-xs font-bold rounded-xl transition shadow-sm">🍜 Makanan Siap Saji</a>
+                <a href="kategori.html?kat=Sembako & Kebutuhan Pokok" class="px-4 py-2 bg-gray-50 hover:bg-green-100 border border-gray-200 text-gray-700 hover:text-green-700 hover:border-green-300 text-xs font-bold rounded-xl transition shadow-sm">🌾 Sembako</a>
+                <a href="kategori.html?kat=Pakaian & Fashion Wanita" class="px-4 py-2 bg-gray-50 hover:bg-green-100 border border-gray-200 text-gray-700 hover:text-green-700 hover:border-green-300 text-xs font-bold rounded-xl transition shadow-sm">👗 Fashion Wanita</a>
+                <a href="kategori.html?kat=Pakaian & Fashion Pria" class="px-4 py-2 bg-gray-50 hover:bg-green-100 border border-gray-200 text-gray-700 hover:text-green-700 hover:border-green-300 text-xs font-bold rounded-xl transition shadow-sm">👔 Fashion Pria</a>
+                <a href="kategori.html?kat=Jasa & Layanan Profesional" class="px-4 py-2 bg-gray-50 hover:bg-green-100 border border-gray-200 text-gray-700 hover:text-green-700 hover:border-green-300 text-xs font-bold rounded-xl transition shadow-sm">🔧 Jasa Lokal</a>
+            </div>
+        </div>
+
+        <!-- PENCARIAN CEPAT BERANDA -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm mb-8 border border-gray-100">
+            <div class="relative">
+                <input type="text" id="kolomCari" onkeyup="filterProduk()" placeholder="Pencarian cepat di beranda..." class="w-full border border-gray-300 rounded-xl pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 transition">
+                <span class="absolute left-4 top-3.5 text-gray-400 text-lg">🔍</span>
+            </div>
+            <!-- Input hidden untuk kompatibilitas filter app.js lama -->
+            <input type="hidden" id="kategoriCari" value="Semua">
+        </div>
+
+        <!-- KATALOG PRODUK -->
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-black text-gray-800">🔥 Rekomendasi Hari Ini</h3>
+            <a href="kategori.html" class="text-xs font-bold text-green-600 hover:underline bg-green-50 px-3 py-1.5 rounded-lg">Jelajahi Lebih Banyak</a>
+        </div>
+        
+        <div id="katalogProduk" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="col-span-full text-center py-10 text-gray-500">Memuat produk...</div>
         </div>
     </main>
 
-    <!-- MODAL / POP-UP KERANJANG (Tersembunyi di awal) -->
-    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-end md:items-center">
-        <div class="bg-white w-full md:w-96 rounded-t-xl md:rounded-xl p-5 max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center border-b pb-3 mb-3">
-                <h3 class="font-bold text-lg"><i class="fas fa-shopping-basket text-green-600 mr-2"></i>Keranjang</h3>
-                <button onclick="toggleCart()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            
-            <p class="text-xs text-orange-600 bg-orange-50 p-2 rounded mb-3">
-                <i class="fas fa-info-circle"></i> Hanya bisa belanja dari 1 toko yang sama dalam satu pesanan.
-            </p>
-
-            <!-- Tempat Item Muncul -->
-            <div id="cartItems" class="flex-1 overflow-y-auto mb-3">
-                <p class="text-center text-gray-400 text-sm italic mt-5">Keranjang masih kosong</p>
-            </div>
-
-            <!-- Total Harga & Tombol Checkout -->
-            <div class="border-t pt-3">
-                <div class="flex justify-between font-bold mb-3">
-                    <span>Total Belanja:</span>
-                    <span id="cartTotal" class="text-green-600">Rp 0</span>
-                </div>
-                <button onclick="prosesCheckoutWA()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition">
-                    <i class="fab fa-whatsapp mr-2"></i>Checkout via WA
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Menghubungkan HTML dengan JavaScript kita -->
-     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
 </html>

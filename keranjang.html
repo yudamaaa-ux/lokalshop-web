@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keranjang Belanja - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-24 md:pb-0">
+
+    <!-- NAVIGASI -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-black text-green-600 tracking-tight">LOKAL<span class="text-gray-800">SHOP</span></a>
+            <a href="index.html" class="text-sm font-bold text-gray-500 hover:text-green-600 transition">← Lanjut Belanja</a>
+        </div>
+    </nav>
+
+    <!-- AREA KERANJANG -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <h2 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">🛒 Keranjang Saya</h2>
+        
+        <div id="loading" class="text-center py-10 text-gray-500 font-bold">Memuat data keranjang dari server...</div>
+        
+        <div id="isiKeranjang" class="space-y-4 hidden">
+            <!-- Item Keranjang dimuat oleh JS -->
+        </div>
+
+        <!-- RINGKASAN PEMBAYARAN -->
+        <div id="ringkasanBayar" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-6 flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <p class="text-xs text-gray-500 font-bold">Total Pembayaran</p>
+                <h3 id="totalBelanja" class="text-2xl font-black text-green-600">Rp0</h3>
+            </div>
+            <button onclick="prosesCheckout()" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-8 py-3.5 rounded-xl shadow-md transition">
+                Pesan Sekarang via WhatsApp 📱
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+const { createClient } = supabase;
+const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+const supabaseClient = createClient(supabaseUrl, supabaseKey);
+// ----------------------------
+
+let dataUserAktif = null;
+let keranjangAktif = [];
+let totalHargaKeseluruhan = 0;
+
+// 1. CEK LOGIN & MUAT KERANJANG DARI DATABASE
+async function inisialisasiKeranjang() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+        alert("Silakan login terlebih dahulu.");
+        window.location.href = 'login.html';
+        return;
+    }
+    dataUserAktif = user;
+    muatDataKeranjang();
+}
+
+async function muatDataKeranjang() {
+    try {
+        // Relasi (Join) tabel Keranjang -> Produk -> Toko
+        const { data, error } = await supabaseClient
+            .from('keranjang')
+            .select(`
+                id, qty, harga, subtotal, produk_id, toko_id,
+                produk ( nama_produk, foto1, stok ),
+                toko ( nama_toko, no_whatsapp )
+            `)
+            .eq('user_id', dataUserAktif.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        document.getElementById('loading').classList.add('hidden');
+        const container = document.getElementById('isiKeranjang');
+        const ringkasan = document.getElementById('ringkasanBayar');
+        
+        container.innerHTML = '';
+        totalHargaKeseluruhan = 0;
+        keranjangAktif = data || [];
+
+        if (keranjangAktif.length === 0) {
+            container.classList.remove('hidden');
+            container.innerHTML = `<div class="bg-white p-10 rounded-2xl text-center text-gray-500 shadow-sm border border-gray-100 font-bold">Keranjang Anda masih kosong. Yuk belanja!</div>`;
+            ringkasan.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        ringkasan.classList.remove('hidden');
+        ringkasan.classList.add('flex');
+
+        keranjangAktif.forEach(item => {
+            totalHargaKeseluruhan += item.subtotal;
+            
+            const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.harga);
+            const subFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.subtotal);
+            
+            // Pengamanan (Fallback) jika produk/toko sudah dihapus
+            const namaProduk = item.produk ? item.produk.nama_produk : 'Produk Tidak Tersedia';
+            const foto = (item.produk && item.produk.foto1) ? item.produk.foto1 : 'https://via.placeholder.com/100';
+            const namaToko = item.toko ? item.toko.nama_toko : 'Toko Lokal';
+
+            container.innerHTML += `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex gap-4 items-center relative transition hover:shadow-md">
+                    <img src="${foto}" class="w-20 h-20 rounded-xl object-cover bg-gray-100 border">
+                    <div class="flex-grow">
+                        <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">🏪 ${namaToko}</span>
+                        <h4 class="font-bold text-gray-800 mt-1 line-clamp-1">${namaProduk}</h4>
+                        <p class="text-xs text-gray-500">${hargaFmt} x ${item.qty}</p>
+                        <h5 class="font-black text-gray-900 mt-1">${subFmt}</h5>
+                    </div>
+                    <button onclick="hapusItem('${item.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition" title="Hapus">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            `;
+        });
+
+        document.getElementById('totalBelanja').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalHargaKeseluruhan);
+
+    } catch (err) {
+        console.error("Error memuat keranjang:", err);
+        document.getElementById('loading').innerHTML = `
+            <div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">
+                <strong>Detail Error Supabase:</strong><br> 
+                ${err.message || JSON.stringify(err)}
+            </div>
+        `;
+    }
+}
+
+// 2. HAPUS ITEM DARI DATABASE KERANJANG
+async function hapusItem(idKeranjang) {
+    if(!confirm("Hapus produk ini dari keranjang?")) return;
+    
+    const { error } = await supabaseClient.from('keranjang').delete().eq('id', idKeranjang);
+    if (!error) {
+        muatDataKeranjang();
+    } else {
+        alert("Gagal menghapus item.");
+    }
+}
+
+// 3. PROSES CHECKOUT (Kurangi Stok & Buat Pesanan)
+async function prosesCheckout() {
+    if (keranjangAktif.length === 0) return;
+    
+    if(!confirm("Lanjutkan pemesanan via WhatsApp? Stok produk akan otomatis dikurangi.")) return;
+
+    const nomorToko = keranjangAktif[0].toko ? keranjangAktif[0].toko.no_whatsapp : '628123456789';
+    const namaTokoLokal = keranjangAktif[0].toko ? keranjangAktif[0].toko.nama_toko : 'Penjual';
+    let pesanWA = `Halo Kak *${namaTokoLokal}*, saya ingin memesan dari LOKAL SHOP:\n\n`;
+
+    try {
+        for (let i = 0; i < keranjangAktif.length; i++) {
+            let item = keranjangAktif[i];
+            let namaProd = item.produk ? item.produk.nama_produk : 'Produk';
+            let stokSkrg = item.produk ? item.produk.stok : 0;
+            
+            pesanWA += `${i+1}. *${namaProd}*\n`;
+            pesanWA += `   - Jumlah: ${item.qty}\n`;
+            pesanWA += `   - Subtotal: Rp${item.subtotal.toLocaleString('id-ID')}\n\n`;
+
+            if(item.produk) {
+                let stokBaru = stokSkrg - item.qty;
+                if(stokBaru < 0) stokBaru = 0; 
+                await supabaseClient.from('produk').update({ stok: stokBaru }).eq('id', item.produk_id);
+            }
+        }
+
+        pesanWA += `*Total Belanja: Rp${totalHargaKeseluruhan.toLocaleString('id-ID')}*\n\nMohon info ketersediaan dan ongkos kirimnya ya Kak. Terima kasih!`;
+
+        const dataPesanan = {
+            user_id: dataUserAktif.id,
+            toko_id: keranjangAktif[0].toko_id,
+            total_harga: totalHargaKeseluruhan,
+            status_pesanan: 'Menunggu Konfirmasi'
+        };
+        await supabaseClient.from('pesanan').insert([dataPesanan]);
+
+        await supabaseClient.from('keranjang').delete().eq('user_id', dataUserAktif.id);
+
+        window.open(`https://wa.me/${nomorToko}?text=${encodeURIComponent(pesanWA)}`, '_blank');
+        window.location.reload();
+
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat memproses pesanan.");
+    }
+}
+
+inisialisasiKeranjang();
+    </script>
+</body>
+</html>

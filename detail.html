@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Produk - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-24">
+
+    <!-- NAVIGASI ATAS -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-green-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">LS</div>
+                <span class="text-xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
+            </a>
+            <a href="index.html" class="text-xs font-bold text-gray-500 hover:text-green-600 transition">← Kembali</a>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-6">
+        <div id="loadingDetail" class="text-center py-20 text-gray-400 font-bold text-sm">Memuat informasi produk...</div>
+
+        <div id="wrapperDetail" class="hidden space-y-6">
+            <!-- INFO PRODUK & TOKO -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
+                <div class="space-y-3">
+                    <!-- Galeri Foto Utama -->
+                    <div class="aspect-square bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 relative">
+                        <img id="fotoProdukUtama" src="" alt="Foto Produk" class="w-full h-full object-cover transition-all duration-300">
+                        <div id="badgeDiskon" class="hidden absolute top-3 right-3 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-md">SEDANG DISKON</div>
+                    </div>
+                    <!-- Thumbnail Foto Tambahan -->
+                    <div id="wadahThumbnail" class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"></div>
+                </div>
+
+                <div class="flex flex-col justify-between">
+                    <div>
+                        <span id="kategoriProduk" class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Kategori</span>
+                        <h1 id="namaProduk" class="text-2xl md:text-3xl font-black text-gray-800 leading-tight mb-2">Nama Produk</h1>
+                        
+                        <div class="flex items-end gap-3 mb-4 border-b border-gray-100 pb-4">
+                            <span id="hargaProduk" class="text-3xl font-black text-green-600">Rp0</span>
+                            <span id="hargaCoret" class="text-sm font-bold text-gray-400 line-through mb-1 hidden">Rp0</span>
+                        </div>
+
+                        <div class="space-y-2 text-sm text-gray-600 mb-6">
+                            <p><strong>Stok Tersedia:</strong> <span id="stokProduk" class="bg-gray-100 px-2 py-0.5 rounded font-bold">0</span></p>
+                            <p><strong>Deskripsi Produk:</strong></p>
+                            <p id="deskripsiProduk" class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700 leading-relaxed min-h-[100px] whitespace-pre-line">Memuat deskripsi...</p>
+                        </div>
+                    </div>
+
+                    <!-- Kotak Profil Toko -->
+                    <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-200 flex items-center justify-center text-xl">🏪</div>
+                            <div>
+                                <h4 id="namaTokoMini" class="font-black text-indigo-900 text-sm">Nama Toko</h4>
+                                <p id="lokasiTokoMini" class="text-[10px] text-indigo-600 font-bold">Lokasi Toko</p>
+                            </div>
+                        </div>
+                        <button id="btnKunjungiToko" class="bg-white hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 font-bold text-xs px-4 py-2 rounded-xl transition shadow-sm">
+                            Kunjungi Toko ↗
+                        </button>
+                    </div>
+
+                    <!-- Tombol Pesan WA -->
+                    <button onclick="bukaModalPesan()" class="w-full bg-green-600 hover:bg-green-700 text-white font-black text-sm px-4 py-4 rounded-2xl transition shadow-lg flex items-center justify-center gap-2">
+                        🛒 Pesan Sekarang via WhatsApp
+                    </button>
+                </div>
+            </div>
+
+            <!-- ULASAN PEMBELI (TERINTEGRASI DATABASE) -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 mt-6">
+                <h3 class="font-black text-gray-800 text-lg border-b pb-3 mb-4 flex items-center gap-2">
+                    ⭐ Ulasan Pembeli <span id="jumlahUlasan" class="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">0</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 h-fit">
+                        <h4 class="font-bold text-xs mb-3 text-gray-700">Tulis Ulasan Anda</h4>
+                        <form id="formUlasanProduk" onsubmit="kirimUlasanKeDatabase(event)" class="space-y-3">
+                            <input type="text" id="ulProdukNama" required placeholder="Nama Anda" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-green-500 bg-white">
+                            <select id="ulProdukBintang" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-green-500 bg-white">
+                                <option value="5">⭐⭐⭐⭐⭐ (Sangat Bagus)</option>
+                                <option value="4">⭐⭐⭐⭐ (Bagus)</option>
+                                <option value="3">⭐⭐⭐ (Biasa)</option>
+                                <option value="2">⭐⭐ (Kurang)</option>
+                                <option value="1">⭐ (Buruk)</option>
+                            </select>
+                            <textarea id="ulProdukKomen" required rows="3" placeholder="Bagaimana kualitas produk ini?" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-green-500 bg-white"></textarea>
+                            <button type="submit" id="btnKirimUlasan" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm">Kirim Ulasan</button>
+                        </form>
+                    </div>
+                    <div id="daftarUlasanDatabase" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                        <div class="text-center text-xs text-gray-400 py-10 font-bold">Memuat ulasan...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAGIAN REKOMENDASI PRODUK SERUPA & POPULER -->
+            <div class="space-y-8 mt-10 pt-6 border-t border-gray-200">
+                <div>
+                    <h3 class="font-black text-gray-800 text-lg mb-4 flex items-center justify-between">
+                        <span>🔄 Mungkin Anda Juga Suka</span>
+                        <a href="index.html" class="text-xs text-green-600 hover:underline">Lihat Semua</a>
+                    </h3>
+                    <div id="gridProdukSerupa" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="col-span-full text-center text-xs text-gray-400 py-6">Mencari produk serupa...</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-black text-gray-800 text-lg mb-4 flex items-center justify-between">
+                        <span>🔥 Sedang Populer Saat Ini</span>
+                    </h3>
+                    <div id="gridProdukPopuler" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="col-span-full text-center text-xs text-gray-400 py-6">Mencari produk populer...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL FORM PEMESANAN WA -->
+    <div id="modalPesan" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-fadeIn">
+            <button onclick="tutupModalPesan()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+            <h3 class="font-black text-xl text-gray-800 mb-1">Detail Pesanan</h3>
+            <p class="text-xs text-gray-500 mb-4 border-b pb-4">Pesanan akan tercatat otomatis di profil akun Anda dan dashboard Penjual.</p>
+            
+            <form id="formCheckoutWa" onsubmit="prosesPesananOtomatis(event)" class="space-y-4">
+                <div class="flex items-center justify-between bg-green-50 p-3 rounded-xl border border-green-100">
+                    <div>
+                        <p class="text-[10px] font-bold text-green-600 uppercase">Harga Satuan</p>
+                        <p id="modalHargaSatuan" class="font-black text-gray-800 text-lg">Rp0</p>
+                    </div>
+                    <div class="text-right">
+                        <label class="block text-[10px] font-bold text-green-600 uppercase mb-1">Jumlah (Qty)</label>
+                        <input type="number" id="modalQty" min="1" value="1" onchange="hitungTotal()" required class="w-20 border border-green-300 rounded-lg px-2 py-1 text-center font-bold outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap Pemesan</label>
+                    <input type="text" id="modalNamaPemesan" required placeholder="Sesuai KTP/Nama Panggilan" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengiriman</label>
+                    <textarea id="modalAlamat" rows="2" required placeholder="Desa, RT/RW, Patokan Rumah..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pesan Tambahan (Opsional)</label>
+                    <textarea id="modalCatatan" rows="2" placeholder="Contoh: Tolong dibungkus rapi" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none"></textarea>
+                </div>
+                <div class="pt-4 border-t border-gray-100 flex items-center justify-between mb-4">
+                    <span class="font-bold text-gray-600 text-sm">Total Bayar:</span>
+                    <span id="modalTotalBayar" class="font-black text-green-600 text-xl">Rp0</span>
+                </div>
+                <button type="submit" id="btnProsesBeli" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl text-sm transition shadow-md">
+                    Konfirmasi & Lanjut ke WhatsApp 💬
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        let dataProdukAktif = null;
+        let dataTokoAktif = null;
+        let hargaFix = 0;
+        let akunUserLog = null;
+
+        async function inisialisasiDetail() {
+            // Cek apakah pembeli sudah login
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            akunUserLog = user;
+
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const idProduk = params.get('id');
+                if (!idProduk) return;
+
+                const { data: produk, error } = await supabaseClient
+                    .from('produk')
+                    .select('*, toko(id, nama_toko, desa, kecamatan, no_whatsapp)')
+                    .eq('id', idProduk)
+                    .single();
+
+                if (error || !produk) throw error;
+                dataProdukAktif = produk;
+                dataTokoAktif = produk.toko;
+
+                hargaFix = produk.harga_diskon > 0 ? produk.harga_diskon : (produk.harga_normal || produk.harga || 0);
+                const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hargaFix);
+
+                document.getElementById('namaProduk').innerText = produk.nama_produk;
+                document.getElementById('kategoriProduk').innerText = produk.kategori || 'Umum';
+                document.getElementById('hargaProduk').innerText = hargaFmt;
+                document.getElementById('stokProduk').innerText = produk.stok || 0;
+                document.getElementById('deskripsiProduk').innerText = produk.deskripsi || 'Tidak ada deskripsi.';
+
+                if (produk.harga_diskon > 0) {
+                    document.getElementById('hargaCoret').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(produk.harga_normal);
+                    document.getElementById('hargaCoret').classList.remove('hidden');
+                    document.getElementById('badgeDiskon').classList.remove('hidden');
+                }
+
+                // GALERI FOTO
+                const fotoList = [produk.foto1, produk.foto2, produk.foto3, produk.foto_url].filter(img => img && img.trim() !== '');
+                const gambarValid = [...new Set(fotoList)];
+                if (gambarValid.length === 0) gambarValid.push('https://via.placeholder.com/500x500?text=Tanpa+Foto');
+                
+                document.getElementById('fotoProdukUtama').src = gambarValid[0];
+                const wadahThumb = document.getElementById('wadahThumbnail');
+                if (gambarValid.length > 1) {
+                    gambarValid.forEach(url => {
+                        wadahThumb.innerHTML += `<img src="${url}" onclick="gantiFotoUtama('${url}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 border-transparent hover:border-green-500 transition shadow-sm flex-shrink-0">`;
+                    });
+                }
+
+                // INFO TOKO
+                if (dataTokoAktif) {
+                    document.getElementById('namaTokoMini').innerText = dataTokoAktif.nama_toko;
+                    document.getElementById('lokasiTokoMini').innerText = `${dataTokoAktif.desa || ''}, Kec. ${dataTokoAktif.kecamatan || ''}`;
+                    document.getElementById('btnKunjungiToko').onclick = () => window.location.href = `toko.html?id=${dataTokoAktif.id}`;
+                }
+
+                document.getElementById('loadingDetail').classList.add('hidden');
+                document.getElementById('wrapperDetail').classList.remove('hidden');
+
+                // TARIK ULASAN & REKOMENDASI PRODUK
+                muatUlasanDatabase(produk.id);
+                muatRekomendasiProduk(produk.kategori, produk.id);
+
+            } catch (err) {
+                document.getElementById('loadingDetail').innerText = "Gagal memuat detail produk.";
+            }
+        }
+
+        // FUNGSI GALERI
+        function gantiFotoUtama(url) { document.getElementById('fotoProdukUtama').src = url; }
+        
+        // FUNGSI MODAL PESANAN
+        function bukaModalPesan() { 
+            if(!akunUserLog) {
+                alert("Anda harus Login terlebih dahulu untuk memesan agar pesanan dapat dilacak.");
+                window.location.href = "login.html";
+                return;
+            }
+            document.getElementById('modalHargaSatuan').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hargaFix); 
+            hitungTotal(); 
+            document.getElementById('modalPesan').classList.remove('hidden'); 
+        }
+        
+        function tutupModalPesan() { document.getElementById('modalPesan').classList.add('hidden'); }
+        
+        function hitungTotal() {
+            const total = hargaFix * document.getElementById('modalQty').value;
+            document.getElementById('modalTotalBayar').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(total);
+        }
+
+        // PEMESANAN CANGGIH (REKAM ID PEMBELI KE DATABASE & KIRIM WA)
+        async function prosesPesananOtomatis(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnProsesBeli');
+            btn.innerText = "Sistem Sedang Mencatat...";
+            btn.disabled = true;
+
+            const qty = document.getElementById('modalQty').value;
+            const nama = document.getElementById('modalNamaPemesan').value;
+            const alamat = document.getElementById('modalAlamat').value;
+            const catatan = document.getElementById('modalCatatan').value || '-';
+            const totalHarga = hargaFix * qty;
+            const totalFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalHarga);
+
+            try {
+                // SIMPAN KE DATABASE
+                await supabaseClient.from('pesanan').insert([{
+                    user_id: akunUserLog.id,
+                    toko_id: dataTokoAktif.id,
+                    produk_id: dataProdukAktif.id,
+                    nama_pembeli: nama,
+                    alamat: alamat,
+                    catatan: catatan,
+                    qty: parseInt(qty),
+                    total_harga: totalHarga,
+                    status: 'Menunggu Konfirmasi'
+                }]);
+
+                const pesanWa = `*PESANAN BARU DARI LOKAL SHOP!* 🛒\n\n` +
+                                `*Detail Produk:*\n` +
+                                `📦 Barang: ${dataProdukAktif.nama_produk}\n` +
+                                `🔢 Jumlah: ${qty} pcs\n` +
+                                `💰 Total: *${totalFmt}*\n\n` +
+                                `*Data Pembeli:*\n` +
+                                `👤 Nama: ${nama}\n` +
+                                `📍 Alamat: ${alamat}\n` +
+                                `📝 Catatan: ${catatan}\n\n` +
+                                `================================\n` +
+                                `⚠️ *PENTING UNTUK PENJUAL* ⚠️\n` +
+                                `Segera buka *Dashboard Toko* Anda di web, masuk ke Tab *Pesanan Masuk*, lalu klik *Konfirmasi*. Pembeli memantau status pesanannya di aplikasi.\n` +
+                                `================================`;
+
+                const linkWa = `https://wa.me/${dataTokoAktif.no_whatsapp}?text=${encodeURIComponent(pesanWa)}`;
+                window.open(linkWa, '_blank');
+                
+                // Pindah ke halaman profil setelah berhasil
+                window.location.href = "profil-user.html";
+
+            } catch (err) {
+                alert("Gagal memproses pesanan. Pastikan koneksi stabil.");
+                btn.innerText = "Coba Lagi";
+                btn.disabled = false;
+            }
+        }
+
+        // FUNGSI ULASAN DATABASE
+        async function muatUlasanDatabase(idProd) {
+            const wadah = document.getElementById('daftarUlasanDatabase');
+            try {
+                const { data: ulasan, error } = await supabaseClient
+                    .from('ulasan')
+                    .select('*')
+                    .eq('produk_id', idProd)
+                    .order('created_at', { ascending: false });
+
+                if (error || ulasan.length === 0) {
+                    wadah.innerHTML = `<div class="text-center text-xs text-gray-400 py-10 font-bold">Belum ada ulasan untuk produk ini. Jadilah yang pertama!</div>`;
+                    return;
+                }
+
+                document.getElementById('jumlahUlasan').innerText = ulasan.length;
+                wadah.innerHTML = '';
+                
+                ulasan.forEach(u => {
+                    const tgl = new Date(u.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    wadah.innerHTML += `
+                        <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50 text-xs shadow-sm">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-black text-gray-800">${u.nama_pembeli}</span>
+                                <span class="text-amber-500 tracking-widest text-[10px]">${'⭐'.repeat(u.bintang)}</span>
+                            </div>
+                            <p class="text-gray-600 leading-relaxed mt-1">"${u.komentar}"</p>
+                            <p class="text-[9px] text-gray-400 text-right mt-2">${tgl}</p>
+                        </div>
+                    `;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function kirimUlasanKeDatabase(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnKirimUlasan');
+            btn.innerText = "Mengirim...";
+            btn.disabled = true;
+
+            try {
+                const nama = document.getElementById('ulProdukNama').value;
+                const bintang = parseInt(document.getElementById('ulProdukBintang').value);
+                const komen = document.getElementById('ulProdukKomen').value;
+
+                const { error } = await supabaseClient.from('ulasan').insert([{
+                    produk_id: dataProdukAktif.id,
+                    toko_id: dataTokoAktif.id,
+                    nama_pembeli: nama,
+                    bintang: bintang,
+                    komentar: komen
+                }]);
+
+                if (error) throw error;
+                
+                alert("Ulasan Anda berhasil disimpan secara permanen!");
+                document.getElementById('formUlasanProduk').reset();
+                muatUlasanDatabase(dataProdukAktif.id);
+
+            } catch (err) {
+                alert("Gagal mengirim ulasan.");
+            } finally {
+                btn.innerText = "Kirim Ulasan";
+                btn.disabled = false;
+            }
+        }
+
+        // FUNGSI REKOMENDASI PRODUK SERUPA & POPULER
+        async function muatRekomendasiProduk(kategori, currentId) {
+            try {
+                // 1. Ambil 4 Produk Serupa (Kategori Sama)
+                const { data: serupa } = await supabaseClient
+                    .from('produk')
+                    .select('*, toko(nama_toko)')
+                    .eq('kategori', kategori)
+                    .neq('id', currentId)
+                    .limit(4);
+                renderGridProduk('gridProdukSerupa', serupa, 'Tidak ada produk serupa saat ini.');
+
+                // 2. Ambil 4 Produk Pilihan/Populer (Terbaru dari Semua Kategori)
+                const { data: populer } = await supabaseClient
+                    .from('produk')
+                    .select('*, toko(nama_toko)')
+                    .neq('id', currentId)
+                    .order('created_at', { ascending: false })
+                    .limit(4);
+                renderGridProduk('gridProdukPopuler', populer, 'Belum ada produk populer.');
+                
+            } catch (err) {
+                console.error("Gagal muat rekomendasi", err);
+            }
+        }
+
+        // BANTUAN RENDER REKOMENDASI
+        function renderGridProduk(elementId, data, teksKosong) {
+            const grid = document.getElementById(elementId);
+            if (!data || data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-xs text-gray-400 py-6">${teksKosong}</div>`;
+                return;
+            }
+            
+            grid.innerHTML = '';
+            data.forEach(p => {
+                const harga = p.harga_diskon > 0 ? p.harga_diskon : (p.harga_normal || p.harga || 0);
+                const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(harga);
+                const foto = p.foto1 || p.foto_url || 'https://via.placeholder.com/300x200?text=Tanpa+Foto';
+                const namaToko = p.toko ? p.toko.nama_toko : 'Toko Lokal';
+
+                grid.innerHTML += `
+                    <a href="detail.html?id=${p.id}" class="block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-green-300 transition flex flex-col h-full">
+                        <div class="h-32 bg-gray-100 relative">
+                            <img src="${foto}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-3 flex flex-col flex-grow">
+                            <h4 class="font-bold text-gray-800 text-[11px] line-clamp-2 mb-1">${p.nama_produk}</h4>
+                            <p class="text-[9px] text-gray-400 mb-2">🏪 ${namaToko}</p>
+                            <div class="font-black text-green-600 text-xs mt-auto">${hargaFmt}</div>
+                        </div>
+                    </a>
+                `;
+            });
+        }
+
+        inisialisasiDetail();
+    </script>
+</body>
+</html>
