@@ -62,10 +62,10 @@
         <!-- PENCARIAN CEPAT BERANDA -->
         <div class="bg-white p-4 rounded-2xl shadow-sm mb-8 border border-gray-100">
             <div class="relative">
-                <input type="text" id="kolomCari" onkeyup="filterProduk()" placeholder="Pencarian cepat di beranda..." class="w-full border border-gray-300 rounded-xl pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 transition">
+                <input type="text" id="kolomCari" onkeyup="filterPencarianCepat()" placeholder="Pencarian cepat di beranda..." class="w-full border border-gray-300 rounded-xl pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 transition">
                 <span class="absolute left-4 top-3.5 text-gray-400 text-lg">🔍</span>
             </div>
-            <!-- Input hidden untuk kompatibilitas filter app.js lama -->
+            <!-- Input hidden untuk kompatibilitas -->
             <input type="hidden" id="kategoriCari" value="Semua">
         </div>
 
@@ -76,10 +76,152 @@
         </div>
         
         <div id="katalogProduk" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div class="col-span-full text-center py-10 text-gray-500">Memuat produk...</div>
+            <div class="col-span-full text-center py-10 text-gray-500 font-bold text-sm">Memuat produk lokal terbaik...</div>
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <!-- SCRIPT UTAMA HALAMAN INDEX -->
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        let semuaProdukGlobal = [];
+
+        // 1. CEK LOGIN (UNTUK NAVBAR)
+        async function cekLoginNav() {
+            const wadahMenu = document.getElementById('menuNavigasi');
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    wadahMenu.innerHTML = `
+                        <a href="dashboard.html" class="text-xs font-bold text-white bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm">Dashboard Saya</a>
+                    `;
+                } else {
+                    wadahMenu.innerHTML = `
+                        <a href="login.html" class="text-xs font-bold text-gray-600 hover:text-green-600 transition hidden sm:block">Masuk</a>
+                        <a href="daftar-toko.html" class="text-xs font-bold text-white bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm">Buka Toko</a>
+                    `;
+                }
+            } catch (error) {
+                console.error("Gagal memuat status auth:", error);
+                wadahMenu.innerHTML = `<a href="login.html" class="text-xs font-bold text-gray-600">Masuk</a>`;
+            }
+        }
+
+        // 2. AMBIL PRODUK DARI SUPABASE DENGAN FILTER KEAMANAN KETAT
+        async function muatProdukBeranda() {
+            const wadah = document.getElementById('katalogProduk');
+            
+            try {
+                // LOGIKA INTI: Pastikan status produk 'Aktif/Disetujui' DAN status tokonya juga 'Aktif/Disetujui'
+                const { data: listProduk, error } = await supabaseClient
+                    .from('produk')
+                    .select(`
+                        id, 
+                        nama_produk, 
+                        harga_normal,
+                        harga_diskon, 
+                        foto1, 
+                        toko!inner (
+                            id,
+                            nama_toko,
+                            kecamatan,
+                            status_verifikasi
+                        )
+                    `)
+                    .in('status_tampil', ['Disetujui', 'Aktif']) 
+                    .in('toko.status_verifikasi', ['Disetujui', 'Aktif'])
+                    .order('created_at', { ascending: false })
+                    .limit(24);
+
+                if (error) throw error;
+
+                if (!listProduk || listProduk.length === 0) {
+                    wadah.innerHTML = `
+                        <div class="col-span-full bg-white p-10 rounded-2xl text-center border border-gray-100">
+                            <span class="text-4xl mb-3 block">🏬</span>
+                            <h4 class="font-bold text-gray-800">Belum Ada Produk Tersedia</h4>
+                            <p class="text-xs text-gray-500 mt-1">Produk akan tampil di sini setelah toko disetujui admin.</p>
+                        </div>`;
+                    return;
+                }
+
+                semuaProdukGlobal = listProduk;
+                renderKatalog(semuaProdukGlobal);
+
+            } catch (error) {
+                console.error("Gagal menarik data:", error);
+                wadah.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold text-sm py-10">Gagal terhubung ke database. Coba muat ulang halaman.</div>`;
+            }
+        }
+
+        // 3. RENDER HTML KE LAYAR
+        function renderKatalog(dataProduk) {
+            const wadah = document.getElementById('katalogProduk');
+            
+            if (dataProduk.length === 0) {
+                wadah.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 text-sm font-bold">Produk tidak ditemukan.</div>`;
+                return;
+            }
+
+            wadah.innerHTML = dataProduk.map(p => {
+                const hargaFix = p.harga_diskon > 0 ? p.harga_diskon : p.harga_normal;
+                const hargaRp = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(hargaFix);
+                const urlFoto = p.foto1 || 'https://via.placeholder.com/300x300?text=Produk+Lokal';
+                
+                // Jika ada diskon, tampilkan coret
+                let elemenHargaAsli = '';
+                if(p.harga_diskon > 0 && p.harga_diskon < p.harga_normal) {
+                    const hargaCoret = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(p.harga_normal);
+                    elemenHargaAsli = `<span class="text-[10px] text-gray-400 line-through block -mb-1">${hargaCoret}</span>`;
+                }
+
+                return `
+                    <a href="detail-produk.html?id=${p.id}" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full">
+                        <div class="aspect-square bg-gray-100 overflow-hidden relative">
+                            <img src="${urlFoto}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="p-3 sm:p-4 flex flex-col flex-grow">
+                            <h3 class="font-bold text-gray-800 text-[11px] sm:text-sm line-clamp-2 mb-2 group-hover:text-green-700 transition">${p.nama_produk}</h3>
+                            <div class="mt-auto">
+                                ${elemenHargaAsli}
+                                <p class="text-green-600 font-black text-sm sm:text-base">${hargaRp}</p>
+                                <div class="mt-2 pt-2 border-t border-gray-50 flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium">
+                                    <span class="truncate bg-gray-50 px-1.5 py-0.5 rounded">🏪 ${p.toko.nama_toko}</span>
+                                    <span class="flex-shrink-0">📍 ${p.toko.kecamatan}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // 4. FITUR PENCARIAN CEPAT DI BERANDA
+        function filterPencarianCepat() {
+            const kataKunci = document.getElementById('kolomCari').value.toLowerCase();
+            
+            if (!kataKunci) {
+                renderKatalog(semuaProdukGlobal);
+                return;
+            }
+
+            const hasilFilter = semuaProdukGlobal.filter(p => {
+                const cocokNama = p.nama_produk.toLowerCase().includes(kataKunci);
+                const cocokToko = p.toko.nama_toko.toLowerCase().includes(kataKunci);
+                const cocokLokasi = p.toko.kecamatan.toLowerCase().includes(kataKunci);
+                return cocokNama || cocokToko || cocokLokasi;
+            });
+
+            renderKatalog(hasilFilter);
+        }
+
+        // 5. JALANKAN SEMUA FUNGSI
+        cekLoginNav();
+        muatProdukBeranda();
+    </script>
 </body>
 </html>

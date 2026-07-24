@@ -33,11 +33,20 @@
 
         <div id="wrapperDashboard" class="hidden">
             
+            <!-- AREA ALERT VERIFIKASI TOKO (BARU) -->
+            <div id="alertVerifikasiToko" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl shadow-sm flex items-start gap-4">
+                <span class="text-2xl mt-1">⏳</span>
+                <div>
+                    <h4 class="font-black text-lg text-amber-800 mb-1">Toko Sedang Menunggu Verifikasi</h4>
+                    <p class="text-sm font-medium text-amber-700 opacity-90">Toko Anda sedang ditinjau oleh Admin. Produk Anda tidak akan tampil di halaman publik sampai toko disetujui.</p>
+                </div>
+            </div>
+            
             <div class="bg-gradient-to-r from-indigo-800 to-indigo-600 rounded-3xl p-6 text-white shadow-md flex justify-between items-center mb-6">
                 <div class="flex items-center gap-4">
                     <img id="headerLogoToko" src="https://via.placeholder.com/100" class="w-14 h-14 rounded-full object-cover border-2 border-white/50 shadow-sm bg-white">
                     <div>
-                        <h2 id="teksNamaToko" class="text-2xl font-black mb-1">Nama Toko</h2>
+                        <h2 id="teksNamaToko" class="text-2xl font-black mb-1 flex items-center gap-2">Nama Toko</h2>
                         <p class="text-indigo-200 text-xs">Pusat Pengelolaan Produk & Pesanan</p>
                     </div>
                 </div>
@@ -258,14 +267,12 @@
             const fileInput = document.getElementById(inputId);
             const file = fileInput.files[0];
             
-            if (!file) return null; // Jika tidak ada file yang dipilih
+            if (!file) return null;
 
-            // Generate nama file unik agar tidak bentrok
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
             const filePath = `${folderName}/${fileName}`;
 
-            // Upload ke bucket bernama 'lokalshop-storage'
             const { error: uploadError } = await supabaseClient.storage
                 .from('lokalshop-storage')
                 .upload(filePath, file);
@@ -275,7 +282,6 @@
                 throw new Error("Gagal mengunggah gambar. Pastikan Bucket 'lokalshop-storage' sudah Public.");
             }
 
-            // Ambil URL Publiknya
             const { data } = supabaseClient.storage.from('lokalshop-storage').getPublicUrl(filePath);
             return data.publicUrl;
         }
@@ -309,7 +315,29 @@
                     dataTokoSaya = toko;
                     document.getElementById('wrapperDashboard').classList.remove('hidden');
                     
-                    document.getElementById('teksNamaToko').innerText = toko.nama_toko;
+                    // -- [BARU] LOGIKA TAMPILAN STATUS VERIFIKASI TOKO --
+                    const teksNamaToko = document.getElementById('teksNamaToko');
+                    const alertVerifikasi = document.getElementById('alertVerifikasiToko');
+                    
+                    if (toko.status_verifikasi === 'Disetujui' || toko.status_verifikasi === 'Aktif') {
+                        alertVerifikasi.classList.add('hidden');
+                        teksNamaToko.innerHTML = `${toko.nama_toko} <span class="bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full align-middle ml-2 shadow-sm">✅ Aktif</span>`;
+                    } else if (toko.status_verifikasi === 'Ditolak') {
+                        alertVerifikasi.classList.remove('hidden');
+                        alertVerifikasi.className = "bg-rose-50 border-l-4 border-rose-500 p-4 mb-6 rounded-r-xl shadow-sm flex items-start gap-4";
+                        alertVerifikasi.innerHTML = `
+                            <span class="text-2xl mt-1">❌</span>
+                            <div>
+                                <h4 class="font-black text-lg text-rose-800 mb-1">Pendaftaran Toko Ditolak</h4>
+                                <p class="text-sm font-medium text-rose-700 opacity-90">Maaf, pendaftaran toko Anda ditolak oleh Admin. Hubungi layanan bantuan kami.</p>
+                            </div>`;
+                        teksNamaToko.innerHTML = `${toko.nama_toko} <span class="bg-rose-500 text-white text-[10px] px-2 py-1 rounded-full align-middle ml-2 shadow-sm">❌ Ditolak</span>`;
+                    } else {
+                        alertVerifikasi.classList.remove('hidden');
+                        teksNamaToko.innerHTML = `${toko.nama_toko} <span class="bg-amber-500 text-white text-[10px] px-2 py-1 rounded-full align-middle ml-2 shadow-sm animate-pulse">⏳ Menunggu</span>`;
+                    }
+                    // --------------------------------------------------
+
                     document.getElementById('btnLihatToko').href = `toko.html?id=${toko.id}`;
                     
                     if(toko.logo_toko) {
@@ -364,12 +392,23 @@
                     const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hrg);
                     const foto = p.foto1 || p.foto_url || 'https://via.placeholder.com/50';
 
+                    // -- [BARU] LENCANA STATUS PRODUK --
+                    let badgeProduk = '';
+                    if (p.status_tampil === 'Disetujui' || p.status_tampil === 'Aktif') {
+                        badgeProduk = '<span class="bg-emerald-100 text-emerald-700 border border-emerald-300 text-[9px] px-2 py-0.5 rounded font-bold ml-2">✅ Aktif</span>';
+                    } else if (p.status_tampil === 'Ditolak') {
+                        badgeProduk = '<span class="bg-rose-100 text-rose-700 border border-rose-300 text-[9px] px-2 py-0.5 rounded font-bold ml-2">❌ Ditolak</span>';
+                    } else {
+                        badgeProduk = '<span class="bg-amber-100 text-amber-700 border border-amber-300 text-[9px] px-2 py-0.5 rounded font-bold ml-2">⏳ Menunggu Verifikasi</span>';
+                    }
+                    // ----------------------------------
+
                     tabel.innerHTML += `
                         <tr class="border-b hover:bg-gray-50 transition">
                             <td class="p-3 flex items-center gap-3">
                                 <img src="${foto}" class="w-10 h-10 object-cover rounded-lg border">
                                 <div>
-                                    <p class="font-bold text-gray-800 text-xs">${p.nama_produk}</p>
+                                    <p class="font-bold text-gray-800 text-xs">${p.nama_produk} ${badgeProduk}</p>
                                     <p class="text-[10px] text-gray-400">${p.kategori || '-'}</p>
                                 </div>
                             </td>
@@ -415,15 +454,18 @@
                     harga_normal: parseFloat(hNormal),
                     harga_diskon: hDiskon ? parseFloat(hDiskon) : null,
                     deskripsi: deskripsi,
-                    foto1: urlFoto1, // Disimpan otomatis sebagai URL Supabase
+                    foto1: urlFoto1, 
                     foto2: urlFoto2,
                     foto3: urlFoto3,
-                    status_tampil: 'Aktif'
+                    
+                    // -- [BARU] PRODUK BARU OTOMATIS MENUNGGU VERIFIKASI --
+                    status_tampil: 'Menunggu Verifikasi'
+                    // -----------------------------------------------------
                 }]);
 
                 if (error) throw error;
 
-                alert("Produk berhasil ditambahkan!");
+                alert("Produk berhasil ditambahkan dan sedang menunggu verifikasi Admin!");
                 document.getElementById('formTambahProduk').reset();
                 muatKatalogProduk(); 
                 bukaTab('katalog'); 

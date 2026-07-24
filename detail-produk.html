@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Produk - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        /* Sembunyikan panah pada input number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-24 md:pb-10">
+
+    <!-- NAVIGASI UTAMA -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 text-gray-500 hover:text-green-600 transition font-bold text-sm">
+                <span>← Kembali</span>
+            </a>
+            <a href="index.html" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-green-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">LS</div>
+                <span class="text-xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
+            </a>
+            <div class="w-16"></div> <!-- Spacer -->
+        </div>
+    </nav>
+
+    <!-- LOADING STATE -->
+    <div id="loadingState" class="max-w-6xl mx-auto px-4 py-20 text-center animate-pulse">
+        <div class="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-gray-500 font-bold">Menyiapkan detail produk...</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="errorState" class="hidden max-w-lg mx-auto px-4 py-20 text-center">
+        <span class="text-6xl block mb-4">🚫</span>
+        <h2 class="text-2xl font-black text-gray-800 mb-2">Produk Tidak Ditemukan</h2>
+        <p class="text-gray-500 text-sm mb-6">Produk ini mungkin telah dihapus, stok habis, atau sedang menunggu peninjauan admin.</p>
+        <a href="index.html" class="bg-green-600 text-white font-bold px-6 py-3 rounded-xl shadow-md">Kembali Belanja</a>
+    </div>
+
+    <!-- KONTEN UTAMA PRODUK -->
+    <main id="kontenProduk" class="hidden max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
+        
+        <!-- KOLOM KIRI (FOTO & DESKRIPSI) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Galeri Foto -->
+            <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex flex-col items-center">
+                <div class="w-full aspect-square md:aspect-video bg-gray-100 rounded-2xl overflow-hidden mb-4 relative">
+                    <img id="fotoUtama" src="" class="w-full h-full object-cover">
+                    <div id="badgeStok" class="absolute top-4 right-4 bg-green-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md">Tersedia</div>
+                </div>
+                <!-- Thumbnail -->
+                <div id="galeriThumb" class="flex gap-3 overflow-x-auto pb-2 w-full">
+                    <!-- Diisi JS -->
+                </div>
+            </div>
+
+            <!-- Profil Toko -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img id="logoToko" src="https://via.placeholder.com/100" class="w-14 h-14 rounded-full object-cover border border-gray-200">
+                    <div>
+                        <h3 id="namaToko" class="font-black text-gray-800 text-lg">Nama Toko</h3>
+                        <p id="lokasiToko" class="text-xs text-gray-500 font-medium flex items-center gap-1">📍 Memuat lokasi...</p>
+                    </div>
+                </div>
+                <a id="linkToko" href="#" class="bg-gray-50 hover:bg-green-50 text-green-700 font-bold border border-gray-200 hover:border-green-300 text-xs px-4 py-2 rounded-xl transition">
+                    Kunjungi Toko
+                </a>
+            </div>
+
+            <!-- Deskripsi -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h3 class="font-black text-gray-800 text-lg mb-4 border-b border-gray-100 pb-3">Deskripsi Produk</h3>
+                <p id="deskripsiProduk" class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+        </div>
+
+        <!-- KOLOM KANAN (FORM PEMESANAN / CHECKOUT) -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 sticky top-24">
+                
+                <!-- Info Harga Singkat -->
+                <div class="mb-6 border-b border-gray-100 pb-4">
+                    <h1 id="judulProduk" class="text-xl md:text-2xl font-black text-gray-800 mb-2 leading-tight">Nama Produk</h1>
+                    <div id="wadahHargaAsli" class="hidden">
+                        <span id="hargaAsli" class="text-xs text-gray-400 line-through">Rp 0</span>
+                        <span class="bg-rose-100 text-rose-600 text-[9px] font-bold px-2 py-0.5 rounded ml-2">Diskon</span>
+                    </div>
+                    <p id="hargaProduk" class="text-3xl font-black text-green-600">Rp 0</p>
+                </div>
+
+                <form id="formPesanan" onsubmit="prosesBeliSekarang(event)" class="space-y-5">
+                    
+                    <!-- Kuantitas -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-2">Jumlah Pembelian <span class="text-red-500">*</span></label>
+                        <div class="flex items-center w-32 border border-gray-300 rounded-xl overflow-hidden bg-white">
+                            <button type="button" onclick="ubahQty(-1)" class="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition">-</button>
+                            <input type="number" id="inputQty" value="1" min="1" required class="w-full h-10 text-center font-black text-gray-800 outline-none" onchange="hitungTotal()">
+                            <button type="button" onclick="ubahQty(1)" class="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition">+</button>
+                        </div>
+                        <p id="infoStok" class="text-[10px] text-gray-500 mt-1"></p>
+                    </div>
+
+                    <!-- Identitas Pembeli -->
+                    <div class="space-y-4 pt-4 border-t border-gray-100">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Anda <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputNamaPembeli" required placeholder="Contoh: Budi Santoso" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengiriman / Lokasi <span class="text-red-500">*</span></label>
+                            <textarea id="inputAlamat" required rows="2" placeholder="Nama Jalan, Desa, RT/RW, Patokan..." class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Catatan Tambahan (Opsional)</label>
+                            <input type="text" id="inputCatatan" placeholder="Warna, ukuran, atau pesan ke penjual" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <!-- Opsi Layanan -->
+                    <div class="space-y-4 pt-4 border-t border-gray-100">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Metode Pengiriman <span class="text-red-500">*</span></label>
+                            <select id="opsiPengiriman" required class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-500 bg-white">
+                                <option value="" disabled selected>Memuat metode...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Metode Pembayaran <span class="text-red-500">*</span></label>
+                            <select id="opsiPembayaran" required class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-green-500 bg-white">
+                                <option value="" disabled selected>Memuat metode...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi (Tampil di Desktop, disembunyikan di Mobile) -->
+                    <div class="pt-4 border-t border-gray-100 hidden md:block">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-sm font-bold text-gray-600">Total Pembayaran:</span>
+                            <span id="totalHargaTeks" class="text-xl font-black text-green-600">Rp 0</span>
+                        </div>
+                        <button type="submit" id="btnBeliDesktop" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                            <span>🛒</span> Beli Sekarang
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- TOMBOL BELI MELAYANG (KHUSUS HP) -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-40 flex items-center justify-between">
+        <div>
+            <p class="text-[10px] font-bold text-gray-500">Total Harga</p>
+            <p id="totalHargaMobile" class="text-lg font-black text-green-600 leading-none">Rp 0</p>
+        </div>
+        <button onclick="document.getElementById('btnBeliDesktop').click()" class="bg-green-600 text-white font-black px-8 py-3 rounded-xl shadow-md">
+            Beli Sekarang
+        </button>
+    </div>
+
+    <!-- SCRIPT UTAMA -->
+    <script>
+        // --- KONFIGURASI SUPABASE ---
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        let dataProdukSistem = null;
+        let hargaAktif = 0;
+
+        // 1. AMBIL ID DARI URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        // 2. FETCH DATA PRODUK
+        async function muatDetailProduk() {
+            if (!productId) {
+                tampilkanError();
+                return;
+            }
+
+            try {
+                // Tarik data produk beserta data tokonya
+                const { data: produk, error } = await supabaseClient
+                    .from('produk')
+                    .select('*, toko(*)')
+                    .eq('id', productId)
+                    .single();
+
+                if (error || !produk) throw error;
+
+                // PROTEKSI KEAMANAN: Jangan tampilkan jika belum disetujui Admin
+                if (produk.status_tampil !== 'Disetujui' && produk.status_tampil !== 'Aktif') {
+                    tampilkanError(); return;
+                }
+                if (produk.toko.status_verifikasi !== 'Disetujui' && produk.toko.status_verifikasi !== 'Aktif') {
+                    tampilkanError(); return;
+                }
+
+                dataProdukSistem = produk;
+                renderDataKeLayar();
+
+            } catch (err) {
+                console.error("Gagal muat produk:", err);
+                tampilkanError();
+            }
+        }
+
+        // 3. RENDER UI
+        function renderDataKeLayar() {
+            const p = dataProdukSistem;
+            const t = p.toko;
+
+            // Sembunyikan loading, tampilkan konten
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('kontenProduk').classList.remove('hidden');
+
+            // Set Data Produk
+            document.getElementById('judulProduk').innerText = p.nama_produk;
+            document.getElementById('deskripsiProduk').innerText = p.deskripsi || 'Tidak ada deskripsi.';
+            
+            // Set Harga
+            hargaAktif = p.harga_diskon > 0 ? p.harga_diskon : p.harga_normal;
+            document.getElementById('hargaProduk').innerText = formatRp(hargaAktif);
+            
+            if (p.harga_diskon > 0 && p.harga_diskon < p.harga_normal) {
+                document.getElementById('wadahHargaAsli').classList.remove('hidden');
+                document.getElementById('hargaAsli').innerText = formatRp(p.harga_normal);
+            }
+
+            // Set Stok
+            const inputQty = document.getElementById('inputQty');
+            inputQty.max = p.stok;
+            document.getElementById('infoStok').innerText = `Tersisa ${p.stok} buah`;
+            if (p.stok <= 0) {
+                document.getElementById('badgeStok').innerText = "Habis Terjual";
+                document.getElementById('badgeStok').className = "absolute top-4 right-4 bg-gray-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md";
+                document.getElementById('btnBeliDesktop').disabled = true;
+                document.getElementById('btnBeliDesktop').innerText = "Stok Habis";
+                document.getElementById('btnBeliDesktop').classList.replace('bg-green-600', 'bg-gray-400');
+            }
+
+            // Set Foto
+            const fotoUtama = p.foto1 || 'https://via.placeholder.com/600';
+            document.getElementById('fotoUtama').src = fotoUtama;
+            
+            // Render Thumbnail Galeri
+            let htmlThumb = `<img src="${fotoUtama}" onclick="gantiFoto('${fotoUtama}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 border-green-500">`;
+            if (p.foto2) htmlThumb += `<img src="${p.foto2}" onclick="gantiFoto('${p.foto2}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border border-gray-200 hover:border-green-500 transition">`;
+            if (p.foto3) htmlThumb += `<img src="${p.foto3}" onclick="gantiFoto('${p.foto3}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border border-gray-200 hover:border-green-500 transition">`;
+            document.getElementById('galeriThumb').innerHTML = htmlThumb;
+
+            // Set Data Toko
+            document.getElementById('namaToko').innerText = t.nama_toko;
+            document.getElementById('lokasiToko').innerHTML = `📍 ${t.kecamatan}, Trenggalek`;
+            document.getElementById('logoToko').src = t.logo_toko || 'https://via.placeholder.com/100';
+            document.getElementById('linkToko').href = `toko.html?id=${t.id}`;
+
+            // Set Opsi Pengiriman (Split string dari database)
+            const opsiKirim = t.metode_pengiriman || 'Diambil Ke Tempat (Pickup)';
+            document.getElementById('opsiPengiriman').innerHTML = opsiKirim.split(',').map(met => `<option value="${met.trim()}">${met.trim()}</option>`).join('');
+
+            // Set Opsi Pembayaran (Split string dari database)
+            const opsiBayar = t.metode_pembayaran || 'COD / Tunai';
+            document.getElementById('opsiPembayaran').innerHTML = opsiBayar.split(',').map(met => `<option value="${met.trim()}">${met.trim()}</option>`).join('');
+
+            hitungTotal();
+        }
+
+        // 4. LOGIKA FORM PEMESANAN
+        function gantiFoto(url) { document.getElementById('fotoUtama').src = url; }
+        function formatRp(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
+        
+        function ubahQty(nilai) {
+            const input = document.getElementById('inputQty');
+            let current = parseInt(input.value) || 1;
+            let max = parseInt(input.max) || 999;
+            let hasil = current + nilai;
+            if (hasil < 1) hasil = 1;
+            if (hasil > max) hasil = max;
+            input.value = hasil;
+            hitungTotal();
+        }
+
+        function hitungTotal() {
+            const qty = parseInt(document.getElementById('inputQty').value) || 1;
+            const total = qty * hargaAktif;
+            document.getElementById('totalHargaTeks').innerText = formatRp(total);
+            document.getElementById('totalHargaMobile').innerText = formatRp(total);
+        }
+
+        // 5. EKSEKUSI PEMBELIAN KE DATABASE & WHATSAPP
+        async function prosesBeliSekarang(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnBeliDesktop');
+            btn.innerText = "Memproses Pesanan...";
+            btn.disabled = true;
+
+            const qty = parseInt(document.getElementById('inputQty').value);
+            const totalHarga = qty * hargaAktif;
+            
+            const dataPesanan = {
+                toko_id: dataProdukSistem.toko_id,
+                produk_id: dataProdukSistem.id,
+                nama_pembeli: document.getElementById('inputNamaPembeli').value,
+                alamat: document.getElementById('inputAlamat').value,
+                catatan: document.getElementById('inputCatatan').value,
+                qty: qty,
+                total_harga: totalHarga,
+                status: 'Menunggu Konfirmasi', // Masuk ke dashboard admin & penjual
+                
+                // Menyimpan pilihan metode di kolom catatan tambahan (karena tabel pesanan sebelumnya tidak punya kolom spesifik ini)
+                catatan: `Kirim: ${document.getElementById('opsiPengiriman').value} | Bayar: ${document.getElementById('opsiPembayaran').value} | Note: ${document.getElementById('inputCatatan').value}`
+            };
+
+            try {
+                // Simpan ke Supabase
+                const { error } = await supabaseClient.from('pesanan').insert([dataPesanan]);
+                if (error) throw error;
+
+                // Format Pesan WhatsApp
+                const noWa = dataProdukSistem.toko.no_whatsapp;
+                const namaToko = dataProdukSistem.toko.nama_toko;
+                
+                let pesanWa = `Halo Admin *${namaToko}*, saya memesan produk dari Lokal Shop:\n\n`;
+                pesanWa += `📦 *Produk:* ${dataProdukSistem.nama_produk}\n`;
+                pesanWa += `🔢 *Jumlah:* ${qty} pcs\n`;
+                pesanWa += `💵 *Total Harga:* ${formatRp(totalHarga)}\n`;
+                pesanWa += `🚚 *Pengiriman:* ${document.getElementById('opsiPengiriman').value}\n`;
+                pesanWa += `💳 *Pembayaran:* ${document.getElementById('opsiPembayaran').value}\n\n`;
+                pesanWa += `👤 *Nama:* ${dataPesanan.nama_pembeli}\n`;
+                pesanWa += `📍 *Alamat:* ${document.getElementById('inputAlamat').value}\n`;
+                if(document.getElementById('inputCatatan').value) {
+                    pesanWa += `📝 *Catatan:* ${document.getElementById('inputCatatan').value}\n`;
+                }
+                pesanWa += `\nMohon konfirmasinya ya!`;
+
+                // Redirect ke WhatsApp
+                const linkWa = `https://wa.me/${noWa}?text=${encodeURIComponent(pesanWa)}`;
+                window.location.href = linkWa;
+
+            } catch (err) {
+                console.error(err);
+                alert("Gagal memproses pesanan. Silakan periksa koneksi Anda.");
+                btn.innerText = "Beli Sekarang";
+                btn.disabled = false;
+            }
+        }
+
+        function tampilkanError() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+        }
+
+        // START
+        muatDetailProduk();
+    </script>
+</body>
+</html>
