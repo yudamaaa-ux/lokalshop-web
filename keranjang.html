@@ -180,6 +180,36 @@
             muatKeranjang();
         }
 
+        // --- FUNGSI BARU YANG DITAMBAHKAN ---
+        function buatPesanWhatsApp(data) {
+            const formatRupiah = (angka) => 
+                new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+            // Susun Template Pesan (Mendukung Multi-Produk dalam Keranjang)
+            const pesan = `Halo Admin *${data.namaToko || 'Toko'}*, saya memesan produk dari Lokal Shop:
+
+${data.detailProduk}
+=====================
+💵 *SUBTOTAL: ${formatRupiah(data.totalHarga)}*
+=====================
+
+👤 *Nama:* ${data.namaPembeli}
+📍 *Alamat:* ${data.alamatPembeli}
+📝 *Catatan:* ${data.catatan || '-'}
+
+Mohon konfirmasinya ya!
+
+🔔 *Catatan Admin:* 
+Tolong konfirmasi & update status pesanan ini lewat menu *Pesanan Masuk* di Dashboard Lokal Shop agar pesanan tercatat diproses sehingga bisa membantu pembukuan toko setiap bulannya. Terima kasih!`;
+
+            // Encode URL agar aman dikirim ke link wa.me
+            const nomorWaAman = String(data.noWhatsapp).replace(/[^0-9]/g, '');
+            const urlWa = `https://wa.me/${nomorWaAman}?text=${encodeURIComponent(pesan)}`;
+            
+            return urlWa;
+        }
+        // ------------------------------------
+
         // 4. PROSES CHECKOUT PER TOKO (MULTIPLE INSERT)
         async function checkoutToko(tokoId) {
             const nama = document.getElementById(`nama_${tokoId}`).value;
@@ -208,10 +238,11 @@
                     const totalHargaItem = item.harga * item.qty;
                     totalSemua += totalHargaItem;
                     
-                    // Siapkan text WhatsApp
+                    // Siapkan text WhatsApp untuk keranjang multi-produk
                     textProdukWa += `📦 *${item.nama_produk}* (x${item.qty})\n`;
-                    textProdukWa += `   Harga: ${formatRp(totalHargaItem)}\n`;
-                    textProdukWa += `   Kirim: ${item.opsi_kirim || '-'} | Bayar: ${item.opsi_bayar || '-'}\n\n`;
+                    textProdukWa += `   Harga: ${formatRp(item.harga)}\n`;
+                    textProdukWa += `   Kirim: ${item.opsi_kirim || 'Diambil Ke Tempat (Pickup)'}\n`;
+                    textProdukWa += `   Bayar: ${item.opsi_bayar || 'COD / Tunai'}\n\n`;
 
                     // Siapkan data untuk disuntik ke Supabase (Tabel pesanan)
                     arrayPesananDB.push({
@@ -231,26 +262,26 @@
                 const { error } = await supabaseClient.from('pesanan').insert(arrayPesananDB);
                 if (error) throw error;
 
-                // Buat Pesan WA
-                const namaToko = itemsTokoIni[0].nama_toko;
-                const noWa = itemsTokoIni[0].no_wa;
+                // --- INTEGRASI FUNGSI BARU DI SINI ---
+                const dataWa = {
+                    namaToko: itemsTokoIni[0].nama_toko,
+                    detailProduk: textProdukWa.trim(),
+                    totalHarga: totalSemua,
+                    namaPembeli: nama,
+                    alamatPembeli: alamat,
+                    catatan: catatan,
+                    noWhatsapp: itemsTokoIni[0].no_wa
+                };
 
-                let pesanWa = `Halo Admin *${namaToko}*, saya memesan beberapa produk dari Lokal Shop:\n\n`;
-                pesanWa += textProdukWa;
-                pesanWa += `=====================\n`;
-                pesanWa += `💵 *SUBTOTAL: ${formatRp(totalSemua)}*\n`;
-                pesanWa += `=====================\n\n`;
-                pesanWa += `👤 *Nama:* ${nama}\n`;
-                pesanWa += `📍 *Alamat:* ${alamat}\n`;
-                if (catatan) pesanWa += `📝 *Catatan:* ${catatan}\n`;
-                pesanWa += `\n!!! Mohon konfirmasinya di dalam dashboard toko ya - klik pesanan masuk!!! untuk konfirmasi pesanan ke pembeli... terimakasih...`;
+                const urlWa = buatPesanWhatsApp(dataWa);
+                // -------------------------------------
 
                 // Hapus HANYA item dari toko ini di keranjang lokal
                 cart = cart.filter(item => item.id_toko !== tokoId);
                 localStorage.setItem('lokalshop_cart', JSON.stringify(cart));
 
                 // Arahkan ke WhatsApp
-                window.location.href = `https://wa.me/${noWa}?text=${encodeURIComponent(pesanWa)}`;
+                window.location.href = urlWa;
 
             } catch (err) {
                 console.error(err);
