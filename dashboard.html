@@ -110,20 +110,29 @@
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nama Produk <span class="text-red-500">*</span></label>
                                 <input type="text" id="addNama" required placeholder="Contoh: Kripik Pisang Manis" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
+                            <!-- Input Kategori -->
+                             <div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Kategori <span class="text-red-500">*</span></label>
-                                    <select id="addKategori" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
-                                        <option value="Makanan & Minuman">Makanan & Minuman</option>
-                                        <option value="Sembako">Sembako</option>
-                                        <option value="Fashion">Fashion</option>
-                                        <option value="Jasa">Jasa</option>
-                                        <option value="Lainnya">Lainnya</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Stok Barang <span class="text-red-500">*</span></label>
-                                    <input type="number" id="addStok" required min="1" value="10" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                                <label for="kategori" class="block text-sm font-bold text-gray-700 mb-2">Kategori Produk <span class="text-red-500">*</span></label>
+                                <select id="kategori" name="kategori" required class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 focus:bg-white transition shadow-sm cursor-pointer">
+                                    <option value="" disabled selected>-- Pilih Kategori Produk --</option>
+                                    <option value="Sembako & Kebutuhan Pokok">🌾 Sembako & Kebutuhan Pokok</option>
+                                    <option value="Makanan & Minuman Olahan">🍜 Makanan & Minuman Olahan</option>
+                                    <option value="Sayur, Buah & Daging Segar">🥦 Sayur, Buah & Daging Segar</option>
+                                    <option value="Pakaian & Fashion Wanita">👗 Pakaian & Fashion Wanita</option>
+                                    <option value="Pakaian & Fashion Pria">👔 Pakaian & Fashion Pria</option>
+                                    <option value="Kesehatan & Kecantikan">💄 Kesehatan & Kecantikan</option>
+                                    <option value="Ibu, Bayi & Anak">👶 Ibu, Bayi & Anak</option>
+                                    <option value="Perabotan & Alat Rumah Tangga">🛋️ Perabotan & Alat Rumah Tangga</option>
+                                    <option value="Elektronik & Gadget">📱 Elektronik & Gadget</option>
+                                    <option value="Bahan Bangunan & Perkakas">🔨 Bahan Bangunan & Perkakas</option>
+                                    <option value="Otomotif & Aksesoris">🏍️ Otomotif & Aksesoris</option>
+                                    <option value="Olahraga & Hobi">⚽ Olahraga & Hobi</option>
+                                    <option value="Hewan Peliharaan">🐾 Hewan Peliharaan</option>
+                                    <option value="Jasa & Layanan Profesional">🔧 Jasa & Layanan Profesional</option>
+                                    <option value="Produk Kerajinan / Kesenian Lokal">🎨 Produk Kerajinan Lokal</option>
+                                    <option value="Lainnya">📦 Lainnya...</option>
+                                </select>
                                 </div>
                             </div>
                         </div>

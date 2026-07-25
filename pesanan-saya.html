@@ -89,9 +89,14 @@
             document.getElementById('kosongState').classList.add('hidden');
 
             try {
+                // [DIPERBARUI] Menyebutkan nama constraint fk_pesanan_toko dan fk_pesanan_produk secara eksplisit
                 const { data, error } = await supabaseClient
                     .from('pesanan')
-                    .select('*, toko(nama_toko, no_whatsapp), produk(nama_produk, foto1)')
+                    .select(`
+                        *,
+                        toko:toko!fk_pesanan_toko(nama_toko, no_whatsapp),
+                        produk:produk!fk_pesanan_produk(nama_produk, foto1)
+                    `)
                     .eq('email_pembeli', emailPengguna)
                     .order('created_at', { ascending: false });
 
@@ -169,7 +174,7 @@
                             <div class="flex-1">
                                 <h3 class="font-bold text-sm text-gray-800 line-clamp-2">${namaBarang}</h3>
                                 <p class="text-xs text-gray-500 mt-1">Jumlah: ${p.qty} pcs</p>
-                                <p class="text-xs text-gray-400 mt-1 max-w-[200px] truncate">${p.catatan}</p>
+                                <p class="text-xs text-gray-400 mt-1 max-w-[200px] truncate">${p.catatan || ''}</p>
                             </div>
                         </div>
 
