@@ -6,19 +6,68 @@
     <title>LOKAL SHOP - Pasar Digital Trenggalek</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- TAMBAHAN CSS UNTUK ANIMASI PROMO BERJALAN & DROPDOWN -->
+    <style>
+        /* Animasi teks berjalan (Marquee) */
+        .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
+        .marquee-content { display: inline-block; animation: marquee 20s linear infinite; }
+        @keyframes marquee {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* Animasi Slide Gambar Berjalan */
+        .marquee-img-content { display: flex; animation: slideImage 15s linear infinite; }
+        .marquee-img-content:hover { animation-play-state: paused; } /* Berhenti saat disentuh */
+        @keyframes slideImage {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* Menggeser setengah karena digandakan */
+        }
+
+        /* Animasi Dropdown Profil */
+        .dropdown-menu { display: none; opacity: 0; transform: translateY(-10px); transition: all 0.2s ease-out; }
+        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0); }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen">
 
-    <!-- NAVIGASI UTAMA DENGAN LOGO -->
+    <!-- NAVIGASI UTAMA DENGAN LOGO & ICON -->
     <nav class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            
+            <!-- Logo Kiri -->
             <a href="index.html" class="flex items-center gap-2">
                 <div class="w-10 h-10 bg-green-600 text-white flex items-center justify-center rounded-xl font-black text-xl shadow-md">LS</div>
                 <span class="text-2xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
             </a>
             
-            <div id="menuNavigasi" class="flex gap-3 items-center">
-                <span class="text-xs text-gray-400">Memuat...</span>
+            <!-- Navigasi Kanan (Ikon + Menu User) -->
+            <div class="flex items-center gap-4 sm:gap-6">
+                
+                <!-- FITUR BARU: IKON CHAT, NOTIF, & KERANJANG -->
+                <div class="flex items-center gap-3 sm:gap-5 text-lg sm:text-xl">
+                    <a href="#" onclick="alert('Fitur Pesan/Chat sedang dalam pengembangan!')" class="relative hover:scale-110 transition text-gray-600 hover:text-green-600">
+                        💬
+                        <span class="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full border-2 border-white">2</span>
+                    </a>
+                    <a href="#" onclick="alert('Belum ada notifikasi baru.')" class="relative hover:scale-110 transition text-gray-600 hover:text-green-600">
+                        🔔
+                        <span class="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full border-2 border-white">1</span>
+                    </a>
+                    <a href="keranjang.html" class="relative hover:scale-110 transition text-gray-600 hover:text-green-600">
+                        🛒
+                        <span id="badgeKeranjangHome" class="absolute -top-1 -right-2 bg-green-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">0</span>
+                    </a>
+                </div>
+
+                <div class="h-6 w-px bg-gray-200 hidden sm:block"></div> <!-- Garis Pembatas -->
+
+                <!-- Wadah Menu Login / Profil Dropdown -->
+                <div id="menuNavigasi" class="flex gap-3 items-center relative">
+                    <span class="text-xs text-gray-400">Memuat...</span>
+                </div>
+
             </div>
         </div>
     </nav>
@@ -27,7 +76,7 @@
     <main class="max-w-6xl mx-auto px-4 py-6">
         
         <!-- BANNER BERANDA YANG LEBIH MENARIK -->
-        <div class="bg-gradient-to-r from-green-600 via-teal-600 to-green-700 rounded-3xl p-6 md:p-10 mb-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
+        <div class="bg-gradient-to-r from-green-600 via-teal-600 to-green-700 rounded-3xl p-6 md:p-10 mb-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
             <div class="relative z-10 space-y-3">
                 <span class="bg-white/20 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/30">Marketplace Kecamatan</span>
                 <h2 class="text-3xl md:text-4xl font-black leading-tight">Belanja Mudah<br>dari Tetangga Sendiri!</h2>
@@ -43,7 +92,17 @@
             <div class="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
         </div>
 
-        <!-- KATEGORI CEPAT (SUDAH DIKONEKSIKAN KE KATEGORI.HTML) -->
+        <!-- FITUR BARU: BANNER / PROMO IKLAN BERJALAN -->
+        <!-- Posisi berada tepat di atas Pilihan Kategori -->
+        <div id="wadahBannerIklan" class="mb-6 w-full h-16 md:h-24 bg-amber-50 rounded-2xl border border-amber-200 shadow-sm flex items-center overflow-hidden relative">
+            <div class="marquee-container w-full">
+                <div class="marquee-content text-amber-700 text-[11px] md:text-sm font-black tracking-widest uppercase py-2">
+                    🚀 UNTUK MEMASANG IKLAN ATAU INFORMASI TENTANG USAHA DENGAN MEMASANGKAN BANNER ANDA DISINI - SILAHKAN HUBUNGI ADMIN &nbsp; &nbsp; ⭐ &nbsp; &nbsp; 🚀 UNTUK MEMASANG IKLAN ATAU INFORMASI TENTANG USAHA ANDA SILAHKAN HUBUNGI ADMIN &nbsp; &nbsp; ⭐
+                </div>
+            </div>
+        </div>
+
+        <!-- KATEGORI CEPAT -->
         <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm mb-6 border border-gray-100">
             <div class="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
                 <h3 class="text-sm font-black text-gray-800">Pilihan Kategori</h3>
@@ -90,14 +149,40 @@
 
         let semuaProdukGlobal = [];
 
-        // 1. CEK LOGIN (UNTUK NAVBAR)
+        // -------------------------------------------------------------
+        // 1. CEK LOGIN & DROPDOWN PROFIL
+        // -------------------------------------------------------------
         async function cekLoginNav() {
             const wadahMenu = document.getElementById('menuNavigasi');
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (user) {
+                    const namaUserSingkat = user.email.split('@')[0];
+                    
                     wadahMenu.innerHTML = `
-                        <a href="dashboard.html" class="text-xs font-bold text-white bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm">Dashboard Saya</a>
+                        <div class="relative">
+                            <button onclick="toggleDropdownProfil()" class="flex items-center gap-2 focus:outline-none hover:bg-gray-100 p-1 rounded-lg transition">
+                                <img src="https://ui-avatars.com/api/?name=${namaUserSingkat}&background=16a34a&color=fff" class="w-8 h-8 rounded-full border border-gray-200 shadow-sm object-cover">
+                                <span class="text-xs font-bold text-gray-700 hidden md:block max-w-[100px] truncate">${namaUserSingkat}</span>
+                                <span class="text-[10px] text-gray-400 hidden md:block">▼</span>
+                            </button>
+                            
+                            <div id="dropdownProfil" class="dropdown-menu absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                                <div class="px-4 py-3 bg-green-50 border-b border-green-100">
+                                    <p class="text-[10px] text-green-700 font-bold uppercase tracking-wider">Masuk sebagai</p>
+                                    <p class="text-xs font-black text-gray-800 truncate">${user.email}</p>
+                                </div>
+                                <div class="py-2">
+                                    <a href="dashboard.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">🏪 Buka Dashboard Toko</a>
+                                    <a href="pesanan-saya.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">📦 Pesanan Saya</a>
+                                    <a href="#" onclick="alert('Fitur Barang Favorit (Wishlist) sedang dalam tahap pengembangan dan akan segera hadir di pembaruan selanjutnya!')" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">❤️ Barang Favorit</a> 
+                                    <a href="profil-user.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">⚙️ Pengaturan Akun</a>
+                                </div>
+                                <div class="border-t border-gray-100 py-1">
+                                    <button onclick="prosesKeluar()" class="w-full text-left px-4 py-2.5 text-xs font-black text-red-500 hover:bg-red-50 transition flex items-center gap-2">🚪 Keluar (Logout)</button>
+                                </div>
+                            </div>
+                        </div>
                     `;
                 } else {
                     wadahMenu.innerHTML = `
@@ -106,78 +191,101 @@
                     `;
                 }
             } catch (error) {
-                console.error("Gagal memuat status auth:", error);
-                wadahMenu.innerHTML = `<a href="login.html" class="text-xs font-bold text-gray-600">Masuk</a>`;
+                wadahMenu.innerHTML = `<a href="login.html" class="text-xs font-bold text-white bg-green-600 px-4 py-2 rounded-lg">Masuk</a>`;
             }
         }
 
-        // 2. AMBIL PRODUK DARI SUPABASE DENGAN FILTER KEAMANAN KETAT
+        function toggleDropdownProfil() { document.getElementById('dropdownProfil').classList.toggle('show'); }
+        window.onclick = function(event) {
+            if (!event.target.closest('#menuNavigasi')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) { dropdowns[i].classList.remove('show'); }
+            }
+        }
+        async function prosesKeluar() { await supabaseClient.auth.signOut(); window.location.reload(); }
+        function updateBadgeKeranjangHome() {
+            let cart = JSON.parse(localStorage.getItem('lokalshop_cart')) || [];
+            const badge = document.getElementById('badgeKeranjangHome');
+            if (badge) badge.innerText = cart.length;
+        }
+
+        // -------------------------------------------------------------
+        // 2. FITUR BARU: MUAT BANNER PROMO / IKLAN GAMBAR
+        // -------------------------------------------------------------
+        async function muatBannerPromo() {
+            const wadahBanner = document.getElementById('wadahBannerIklan');
+            try {
+                // Logika: Mencoba mengambil gambar iklan dari tabel 'promo_banners' (jika tabel tersebut nantinya Anda buat).
+                const { data: banners, error } = await supabaseClient.from('promo_banners').select('image_url').eq('status', 'Aktif');
+                
+                // Jika tabel belum ada atau kosong, fallback ke teks berjalan (Placeholder)
+                if (error || !banners || banners.length === 0) {
+                    return; // Biarkan HTML teks berjalan (kuning) yang sudah kita set di atas tetap tampil
+                }
+
+                // Jika ADA GAMBAR, ubah wadah menjadi carousel gambar berjalan
+                // Menggandakan array banner agar efek infinite loop mulus
+                const bannerLoop = [...banners, ...banners]; 
+                
+                let htmlGambar = bannerLoop.map(b => `
+                    <img src="${b.image_url}" class="h-16 md:h-24 w-auto object-cover flex-shrink-0 mr-4 rounded-xl border border-gray-200">
+                `).join('');
+
+                wadahBanner.innerHTML = `
+                    <div class="w-full h-full overflow-hidden flex items-center bg-white p-1 rounded-2xl">
+                        <div class="marquee-img-content">
+                            ${htmlGambar}
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                // Error database: Abaikan dan biarkan teks berjalan tetap tampil
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // 3. AMBIL PRODUK DARI SUPABASE 
+        // -------------------------------------------------------------
         async function muatProdukBeranda() {
             const wadah = document.getElementById('katalogProduk');
-            
             try {
-                // LOGIKA INTI: Pastikan status produk 'Aktif/Disetujui' DAN status tokonya juga 'Aktif/Disetujui'
                 const { data: listProduk, error } = await supabaseClient
                     .from('produk')
-                    .select(`
-                        id, 
-                        nama_produk, 
-                        harga_normal,
-                        harga_diskon, 
-                        foto1, 
-                        toko!inner (
-                            id,
-                            nama_toko,
-                            kecamatan,
-                            status_verifikasi
-                        )
-                    `)
+                    .select(`id, nama_produk, harga_normal, harga_diskon, foto1, toko!inner (id, nama_toko, kecamatan, status_verifikasi)`)
                     .in('status_tampil', ['Disetujui', 'Aktif']) 
                     .in('toko.status_verifikasi', ['Disetujui', 'Aktif'])
                     .order('created_at', { ascending: false })
                     .limit(24);
 
                 if (error) throw error;
-
                 if (!listProduk || listProduk.length === 0) {
-                    wadah.innerHTML = `
-                        <div class="col-span-full bg-white p-10 rounded-2xl text-center border border-gray-100">
-                            <span class="text-4xl mb-3 block">🏬</span>
-                            <h4 class="font-bold text-gray-800">Belum Ada Produk Tersedia</h4>
-                            <p class="text-xs text-gray-500 mt-1">Produk akan tampil di sini setelah toko disetujui admin.</p>
-                        </div>`;
+                    wadah.innerHTML = `<div class="col-span-full bg-white p-10 rounded-2xl text-center border border-gray-100"><span class="text-4xl mb-3 block">🏬</span><h4 class="font-bold text-gray-800">Belum Ada Produk Tersedia</h4><p class="text-xs text-gray-500 mt-1">Produk akan tampil di sini setelah toko disetujui admin.</p></div>`;
                     return;
                 }
-
                 semuaProdukGlobal = listProduk;
                 renderKatalog(semuaProdukGlobal);
-
             } catch (error) {
-                console.error("Gagal menarik data:", error);
                 wadah.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold text-sm py-10">Gagal terhubung ke database. Coba muat ulang halaman.</div>`;
             }
         }
 
-        // 3. RENDER HTML KE LAYAR
+        // -------------------------------------------------------------
+        // 4. RENDER HTML KE LAYAR 
+        // -------------------------------------------------------------
         function renderKatalog(dataProduk) {
             const wadah = document.getElementById('katalogProduk');
-            
             if (dataProduk.length === 0) {
                 wadah.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500 text-sm font-bold">Produk tidak ditemukan.</div>`;
                 return;
             }
-
             wadah.innerHTML = dataProduk.map(p => {
                 const hargaFix = p.harga_diskon > 0 ? p.harga_diskon : p.harga_normal;
                 const hargaRp = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(hargaFix);
                 const urlFoto = p.foto1 || 'https://via.placeholder.com/300x300?text=Produk+Lokal';
-                
-                // Jika ada diskon, tampilkan coret
-                let elemenHargaAsli = '';
-                if(p.harga_diskon > 0 && p.harga_diskon < p.harga_normal) {
-                    const hargaCoret = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(p.harga_normal);
-                    elemenHargaAsli = `<span class="text-[10px] text-gray-400 line-through block -mb-1">${hargaCoret}</span>`;
-                }
+                let elemenHargaAsli = p.harga_diskon > 0 && p.harga_diskon < p.harga_normal 
+                    ? `<span class="text-[10px] text-gray-400 line-through block -mb-1">${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(p.harga_normal)}</span>` 
+                    : '';
 
                 return `
                     <a href="detail-produk.html?id=${p.id}" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full">
@@ -200,28 +308,25 @@
             }).join('');
         }
 
-        // 4. FITUR PENCARIAN CEPAT DI BERANDA
+        // -------------------------------------------------------------
+        // 5. FITUR PENCARIAN CEPAT DI BERANDA 
+        // -------------------------------------------------------------
         function filterPencarianCepat() {
             const kataKunci = document.getElementById('kolomCari').value.toLowerCase();
-            
-            if (!kataKunci) {
-                renderKatalog(semuaProdukGlobal);
-                return;
-            }
-
+            if (!kataKunci) { renderKatalog(semuaProdukGlobal); return; }
             const hasilFilter = semuaProdukGlobal.filter(p => {
-                const cocokNama = p.nama_produk.toLowerCase().includes(kataKunci);
-                const cocokToko = p.toko.nama_toko.toLowerCase().includes(kataKunci);
-                const cocokLokasi = p.toko.kecamatan.toLowerCase().includes(kataKunci);
-                return cocokNama || cocokToko || cocokLokasi;
+                return p.nama_produk.toLowerCase().includes(kataKunci) || p.toko.nama_toko.toLowerCase().includes(kataKunci) || p.toko.kecamatan.toLowerCase().includes(kataKunci);
             });
-
             renderKatalog(hasilFilter);
         }
 
-        // 5. JALANKAN SEMUA FUNGSI
+        // -------------------------------------------------------------
+        // 6. JALANKAN SEMUA FUNGSI SAAT HALAMAN DIBUKA
+        // -------------------------------------------------------------
         cekLoginNav();
+        muatBannerPromo(); // Menjalankan pengecekan banner gambar/teks
         muatProdukBeranda();
+        updateBadgeKeranjangHome(); 
     </script>
 </body>
 </html>

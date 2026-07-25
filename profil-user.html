@@ -3,147 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akun Saya - LOKAL SHOP</title>
+    <title>Profil & Pengaturan - LOKAL SHOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .tab-aktif { background-color: #f0fdf4; color: #16a34a; font-weight: 900; border-right: 4px solid #16a34a; }
+        .tab-nonaktif { color: #6b7280; font-weight: 700; hover: background-color: #f9fafb; }
+        
+        /* Mobile tab styling */
+        @media (max-width: 768px) {
+            .tab-aktif { border-right: none; border-bottom: 4px solid #16a34a; }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans min-h-screen pb-24">
+<body class="bg-gray-50 font-sans min-h-screen pb-20">
 
-    <!-- NAVIGASI ATAS -->
-    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="index.html" class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-green-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">LS</div>
-                <span class="text-xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
+    <!-- NAVIGASI UTAMA -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 text-gray-500 hover:text-green-600 transition font-bold text-sm">
+                <span>← Kembali ke Beranda</span>
             </a>
-            <a href="index.html" class="text-xs font-bold text-gray-500 hover:text-green-600 transition">← Belanja Lagi</a>
+            <h1 class="text-lg font-black text-gray-800">Pengaturan Akun</h1>
+            <div class="w-16"></div> <!-- Spacer -->
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4 py-6">
-        
-        <!-- KARTU INFO AKUN -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl font-black shadow-inner">👤</div>
-                <div>
-                    <h2 class="text-xl font-black text-gray-800" id="userEmail">Memuat Akun...</h2>
-                    <p class="text-xs text-gray-500 font-bold mt-1">Pelanggan Setia Lokal Shop</p>
+    <!-- LOADING STATE -->
+    <div id="loadingState" class="max-w-6xl mx-auto px-4 py-20 text-center animate-pulse">
+        <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-gray-500 text-sm font-bold">Memuat data profil Anda...</p>
+    </div>
+
+    <!-- KONTEN UTAMA -->
+    <main id="kontenUtama" class="hidden max-w-6xl mx-auto px-4 py-8 animate-fade-in">
+        <div class="flex flex-col md:flex-row gap-6 lg:gap-8">
+            
+            <!-- SIDEBAR MENU -->
+            <div class="w-full md:w-1/3 lg:w-1/4">
+                
+                <!-- Profil Singkat Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center mb-4">
+                    <img id="fotoAvatar" src="https://via.placeholder.com/100" class="w-20 h-20 rounded-full object-cover border-4 border-green-50 shadow-md mb-3">
+                    <h2 id="teksNamaSingkat" class="font-black text-gray-800 text-lg line-clamp-1 w-full">Pengguna</h2>
+                    <p id="teksEmailSingkat" class="text-xs text-gray-500 w-full truncate">Memuat email...</p>
+                    <span class="mt-2 bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest">Pembeli Terverifikasi</span>
+                </div>
+
+                <!-- Menu Navigasi Samping -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex md:flex-col overflow-x-auto md:overflow-visible">
+                    <button onclick="bukaTab('profil')" id="btnTab-profil" class="flex-1 md:w-full text-left px-5 py-4 text-sm transition tab-aktif flex items-center gap-3 whitespace-nowrap">
+                        <span class="text-lg">👤</span> Data Diri Pribadi
+                    </button>
+                    <button onclick="bukaTab('keamanan')" id="btnTab-keamanan" class="flex-1 md:w-full text-left px-5 py-4 text-sm transition tab-nonaktif flex items-center gap-3 whitespace-nowrap">
+                        <span class="text-lg">🔒</span> Keamanan & Sandi
+                    </button>
+                    <div class="hidden md:block border-t border-gray-50 my-1"></div>
+                    <button onclick="prosesKeluar()" class="hidden md:flex w-full text-left px-5 py-4 text-sm font-bold text-red-500 hover:bg-red-50 transition items-center gap-3">
+                        <span class="text-lg">🚪</span> Keluar Akun
+                    </button>
                 </div>
             </div>
-            <button onclick="logoutAkun()" class="bg-red-50 hover:bg-red-500 text-red-600 hover:text-white font-bold px-5 py-2.5 rounded-xl text-xs transition border border-red-100 w-full md:w-auto">
-                Keluar Akun (Logout)
-            </button>
-        </div>
 
-        <h3 class="font-black text-lg text-gray-800 mb-4 border-b pb-2">📦 Lacak Pesanan Saya</h3>
-        
-        <!-- DAFTAR PESANAN PEMBELI -->
-        <div id="daftarPesananSaya" class="space-y-4">
-            <div class="text-center py-10 text-gray-400 font-bold text-sm">Memuat riwayat pesanan Anda...</div>
-        </div>
+            <!-- AREA KONTEN (KANAN) -->
+            <div class="w-full md:w-2/3 lg:w-3/4">
+                
+                <!-- TAB 1: DATA DIRI PROFIL -->
+                <div id="tab-profil" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 tab-konten">
+                    <div class="mb-6 border-b border-gray-100 pb-4">
+                        <h3 class="text-xl font-black text-gray-800">Ubah Data Diri Pribadi</h3>
+                        <p class="text-xs text-gray-500 mt-1">Lengkapi data diri Anda agar proses *checkout* pesanan lebih cepat.</p>
+                    </div>
 
+                    <form id="formProfil" onsubmit="simpanProfil(event)" class="space-y-5">
+                        <!-- Email (Disabled) -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Email (Tidak bisa diubah)</label>
+                            <input type="email" id="inputEmail" disabled class="w-full bg-gray-100 text-gray-500 border border-gray-200 rounded-xl px-4 py-2.5 text-sm cursor-not-allowed">
+                        </div>
+
+                        <!-- Nama Lengkap -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap</label>
+                            <input type="text" id="inputNama" placeholder="Masukkan nama asli Anda" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition">
+                        </div>
+
+                        <!-- Nomor HP -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nomor WhatsApp Aktif</label>
+                            <input type="number" id="inputPhone" placeholder="Contoh: 08123456789" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition">
+                        </div>
+
+                        <!-- Alamat -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengiriman Default</label>
+                            <textarea id="inputAlamat" rows="3" placeholder="Nama Jalan, RT/RW, Desa, Kecamatan, Patokan..." class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition"></textarea>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-100 flex justify-end">
+                            <button type="submit" id="btnSimpanProfil" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black px-8 py-3 rounded-xl shadow-md transition transform hover:-translate-y-0.5">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- TAB 2: KEAMANAN & SANDI -->
+                <div id="tab-keamanan" class="hidden bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 tab-konten">
+                    <div class="mb-6 border-b border-gray-100 pb-4">
+                        <h3 class="text-xl font-black text-gray-800">Keamanan Akun</h3>
+                        <p class="text-xs text-gray-500 mt-1">Perbarui kata sandi Anda secara berkala untuk menjaga keamanan.</p>
+                    </div>
+
+                    <form id="formKeamanan" onsubmit="gantiPassword(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kata Sandi Baru</label>
+                            <input type="password" id="inputSandiBaru" required minlength="6" placeholder="Minimal 6 karakter" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Konfirmasi Kata Sandi Baru</label>
+                            <input type="password" id="inputKonfirmasiSandi" required minlength="6" placeholder="Ulangi kata sandi baru" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 bg-gray-50 focus:bg-white transition">
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-100 flex justify-end">
+                            <button type="submit" id="btnSimpanSandi" class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white font-black px-8 py-3 rounded-xl shadow-md transition transform hover:-translate-y-0.5">
+                                Perbarui Kata Sandi
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Zona Bahaya -->
+                    <div class="mt-12 pt-6 border-t border-red-100">
+                        <h4 class="text-sm font-black text-red-600 mb-1">Zona Berbahaya</h4>
+                        <p class="text-xs text-gray-500 mb-4">Tindakan di bawah ini tidak dapat dibatalkan.</p>
+                        <button onclick="alert('Untuk menghapus akun Anda beserta data di dalamnya, silakan hubungi Admin Lokal Shop melalui WhatsApp.')" class="text-xs font-bold text-red-500 border border-red-200 hover:bg-red-50 px-4 py-2 rounded-lg transition">
+                            Ajukan Penghapusan Akun
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </main>
 
+    <!-- Tombol Logout Mobile -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-40">
+        <button onclick="prosesKeluar()" class="w-full text-center px-4 py-3 text-sm font-black text-red-500 hover:bg-red-50 border border-red-100 rounded-xl transition flex items-center justify-center gap-2">
+            <span>🚪</span> Keluar dari Akun
+        </button>
+    </div>
+
+    <!-- SCRIPT UTAMA -->
     <script>
         // --- KONFIGURASI SUPABASE ---
         const { createClient } = supabase;
         const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
         const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
-        // ----------------------------
 
-        let akunUser = null;
+        let currentUser = null;
 
-        async function muatProfilDanPesanan() {
+        // 1. CEK LOGIN & MUAT DATA
+        async function inisialisasi() {
             try {
-                // 1. Cek Login
-                const { data: { user }, error: errAuth } = await supabaseClient.auth.getUser();
-                if (errAuth || !user) {
-                    alert("Sesi Anda telah habis. Silakan login kembali.");
+                const { data: { user }, error } = await supabaseClient.auth.getUser();
+                
+                if (error || !user) {
+                    alert("Akses ditolak. Harap masuk terlebih dahulu.");
                     window.location.href = "login.html";
                     return;
                 }
-                akunUser = user;
-                document.getElementById('userEmail').innerText = user.email;
 
-                // 2. Ambil Riwayat Pesanan dari Database
-                const wadah = document.getElementById('daftarPesananSaya');
-                const { data: pesananList, error: errPesanan } = await supabaseClient
-                    .from('pesanan')
-                    .select('*, toko(*), produk(*)')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
-
-                if (errPesanan) throw errPesanan;
-
-                if (pesananList.length === 0) {
-                    wadah.innerHTML = `
-                        <div class="bg-white p-10 rounded-3xl border border-dashed border-gray-300 text-center">
-                            <div class="text-4xl mb-3">🛍️</div>
-                            <h4 class="font-black text-gray-800 mb-1">Belum Ada Pesanan</h4>
-                            <p class="text-xs text-gray-500 mb-4">Ayo mulai belanja produk lokal terbaik di sekitar Anda!</p>
-                            <a href="index.html" class="bg-green-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md">Mulai Belanja</a>
-                        </div>
-                    `;
-                    return;
-                }
-
-                wadah.innerHTML = '';
-                pesananList.forEach(p => {
-                    const totalFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.total_harga);
-                    const namaToko = p.toko ? p.toko.nama_toko : 'Toko Tidak Diketahui';
-                    const namaProduk = p.produk ? p.produk.nama_produk : 'Produk Telah Dihapus';
-                    
-                    // Cek foto produk aman
-                    let fotoProduk = 'https://via.placeholder.com/100';
-                    if (p.produk) {
-                        fotoProduk = p.produk.foto1 || p.produk.foto_url || fotoProduk;
-                    }
-
-                    const tanggal = new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-                    // Warna Status Interaktif
-                    let warnaStatus = 'bg-gray-100 text-gray-600';
-                    if (p.status === 'Menunggu Konfirmasi') warnaStatus = 'bg-amber-100 text-amber-700 font-bold animate-pulse';
-                    if (p.status === 'Diproses') warnaStatus = 'bg-blue-100 text-blue-700 font-bold';
-                    if (p.status === 'Selesai') warnaStatus = 'bg-green-100 text-green-700 font-bold';
-                    if (p.status === 'Dibatalkan') warnaStatus = 'bg-red-100 text-red-700 font-bold';
-
-                    wadah.innerHTML += `
-                        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-start md:items-center transition hover:shadow-md">
-                            <img src="${fotoProduk}" class="w-16 h-16 rounded-xl object-cover border border-gray-100 flex-shrink-0">
-                            <div class="flex-grow w-full">
-                                <div class="flex justify-between items-start mb-1">
-                                    <span class="text-[10px] text-gray-400 font-bold">${tanggal}</span>
-                                    <span class="px-2 py-1 rounded-lg text-[10px] ${warnaStatus}">${p.status}</span>
-                                </div>
-                                <h4 class="font-black text-sm text-gray-800 line-clamp-1">${namaProduk}</h4>
-                                <p class="text-[11px] text-indigo-600 font-bold mb-2">🏪 ${namaToko}</p>
-                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
-                                    <span class="text-xs text-gray-500">Jumlah: ${p.qty} pcs</span>
-                                    <span class="font-black text-green-600 text-sm">Total: ${totalFmt}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-
+                currentUser = user;
+                tampilkanDataProfil();
             } catch (err) {
-                console.error("Gagal muat pesanan", err);
-                // Perbaikan Syntax Error ada di baris ini:
-                document.getElementById('daftarPesananSaya').innerHTML = `<p class="text-center text-red-500 text-xs font-bold">Terjadi kesalahan saat memuat pesanan Anda.</p>`;
+                console.error(err);
             }
         }
 
-        async function logoutAkun() {
-            if(confirm("Yakin ingin keluar dari akun?")) {
+        // 2. RENDER DATA KE LAYAR
+        function tampilkanDataProfil() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('kontenUtama').classList.remove('hidden');
+
+            const email = currentUser.email;
+            // Mengambil metadata (Nama, Alamat, HP) yang disimpan di Supabase Auth
+            const meta = currentUser.user_metadata || {};
+            const namaLengkap = meta.full_name || email.split('@')[0];
+            
+            // Set Sidebar
+            document.getElementById('teksNamaSingkat').innerText = namaLengkap;
+            document.getElementById('teksEmailSingkat').innerText = email;
+            
+            // Generate Avatar inisial nama
+            document.getElementById('fotoAvatar').src = `https://ui-avatars.com/api/?name=${namaLengkap}&background=16a34a&color=fff&size=128`;
+
+            // Set Form Profil
+            document.getElementById('inputEmail').value = email;
+            document.getElementById('inputNama').value = meta.full_name || '';
+            document.getElementById('inputPhone').value = meta.phone || '';
+            document.getElementById('inputAlamat').value = meta.address || '';
+        }
+
+        // 3. FUNGSI SIMPAN DATA DIRI
+        async function simpanProfil(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSimpanProfil');
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+
+            const nama = document.getElementById('inputNama').value;
+            const telp = document.getElementById('inputPhone').value;
+            const alamat = document.getElementById('inputAlamat').value;
+
+            try {
+                // Update Metadata di Supabase Auth (Tanpa perlu tabel terpisah)
+                const { data, error } = await supabaseClient.auth.updateUser({
+                    data: {
+                        full_name: nama,
+                        phone: telp,
+                        address: alamat
+                    }
+                });
+
+                if (error) throw error;
+
+                alert("✅ Profil berhasil diperbarui!");
+                // Refresh data lokal
+                currentUser = data.user;
+                tampilkanDataProfil();
+
+            } catch (err) {
+                console.error(err);
+                alert("Gagal memperbarui profil. " + err.message);
+            } finally {
+                btn.innerText = "Simpan Perubahan";
+                btn.disabled = false;
+            }
+        }
+
+        // 4. FUNGSI GANTI KATA SANDI
+        async function gantiPassword(event) {
+            event.preventDefault();
+            
+            const sandiBaru = document.getElementById('inputSandiBaru').value;
+            const konfirmasi = document.getElementById('inputKonfirmasiSandi').value;
+
+            if (sandiBaru !== konfirmasi) {
+                alert("❌ Kata sandi tidak cocok. Silakan ketik ulang dengan benar.");
+                return;
+            }
+
+            const btn = document.getElementById('btnSimpanSandi');
+            btn.innerText = "Memperbarui...";
+            btn.disabled = true;
+
+            try {
+                const { error } = await supabaseClient.auth.updateUser({
+                    password: sandiBaru
+                });
+
+                if (error) throw error;
+
+                alert("✅ Kata sandi berhasil diperbarui! Anda akan diarahkan ke halaman login untuk masuk kembali.");
+                await supabaseClient.auth.signOut();
+                window.location.href = "login.html";
+
+            } catch (err) {
+                console.error(err);
+                alert("Gagal mengubah kata sandi. " + err.message);
+            } finally {
+                btn.innerText = "Perbarui Kata Sandi";
+                btn.disabled = false;
+                document.getElementById('inputSandiBaru').value = '';
+                document.getElementById('inputKonfirmasiSandi').value = '';
+            }
+        }
+
+        // 5. FUNGSI LOGOUT
+        async function prosesKeluar() {
+            const konfirmasi = confirm("Yakin ingin keluar dari akun Anda?");
+            if(konfirmasi){
                 await supabaseClient.auth.signOut();
                 window.location.href = "index.html";
             }
         }
 
-        muatProfilDanPesanan();
+        // 6. LOGIKA GANTI TAB
+        function bukaTab(namaTab) {
+            // Sembunyikan semua tab konten
+            document.querySelectorAll('.tab-konten').forEach(el => el.classList.add('hidden'));
+            // Reset gaya tombol tab
+            document.querySelectorAll('[id^="btnTab-"]').forEach(btn => {
+                btn.classList.remove('tab-aktif');
+                btn.classList.add('tab-nonaktif');
+            });
+            
+            // Tampilkan yang dipilih
+            document.getElementById(`tab-${namaTab}`).classList.remove('hidden');
+            const btnAktif = document.getElementById(`btnTab-${namaTab}`);
+            btnAktif.classList.remove('tab-nonaktif');
+            btnAktif.classList.add('tab-aktif');
+        }
+
+        // START
+        inisialisasi();
     </script>
 </body>
 </html>

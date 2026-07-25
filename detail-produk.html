@@ -9,9 +9,11 @@
     <style>
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        /* Sembunyikan panah pada input number */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .dropdown-menu { display: none; opacity: 0; transform: translateY(-10px); transition: all 0.2s ease-out; }
+        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen pb-24 md:pb-10">
@@ -22,11 +24,22 @@
             <a href="index.html" class="flex items-center gap-2 text-gray-500 hover:text-green-600 transition font-bold text-sm">
                 <span>← Kembali</span>
             </a>
-            <a href="index.html" class="flex items-center gap-2">
+            
+            <a href="index.html" class="flex items-center gap-2 absolute left-1/2 transform -translate-x-1/2">
                 <div class="w-8 h-8 bg-green-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">LS</div>
                 <span class="text-xl font-black text-green-600 tracking-tight hidden sm:block">LOKAL<span class="text-gray-800">SHOP</span></span>
             </a>
-            <div class="w-16"></div> <!-- Spacer -->
+            
+            <div class="flex items-center gap-4 sm:gap-6">
+                <!-- IKON KERANJANG -->
+                <a href="keranjang.html" class="relative text-2xl hover:scale-110 transition transform">
+                    🛒
+                    <span id="badgeKeranjangNav" class="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border-2 border-white">0</span>
+                </a>
+
+                <!-- WADAH MENU PROFIL DROPDOWN -->
+                <div id="wadahDropdownProfil" class="hidden sm:flex items-center gap-3 relative"></div>
+            </div>
         </div>
     </nav>
 
@@ -47,7 +60,7 @@
     <!-- KONTEN UTAMA PRODUK -->
     <main id="kontenProduk" class="hidden max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
         
-        <!-- KOLOM KIRI (FOTO & DESKRIPSI) -->
+        <!-- KOLOM KIRI (FOTO, DESKRIPSI, ULASAN) -->
         <div class="lg:col-span-2 space-y-6">
             
             <!-- Galeri Foto -->
@@ -56,16 +69,13 @@
                     <img id="fotoUtama" src="" class="w-full h-full object-cover">
                     <div id="badgeStok" class="absolute top-4 right-4 bg-green-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md">Tersedia</div>
                 </div>
-                <!-- Thumbnail -->
-                <div id="galeriThumb" class="flex gap-3 overflow-x-auto pb-2 w-full">
-                    <!-- Diisi JS -->
-                </div>
+                <div id="galeriThumb" class="flex gap-3 overflow-x-auto pb-2 w-full scrollbar-hide"></div>
             </div>
 
             <!-- Profil Toko -->
             <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <img id="logoToko" src="https://via.placeholder.com/100" class="w-14 h-14 rounded-full object-cover border border-gray-200">
+                    <img id="logoToko" src="https://via.placeholder.com/100" class="w-14 h-14 rounded-full object-cover border border-gray-200 bg-white">
                     <div>
                         <h3 id="namaToko" class="font-black text-gray-800 text-lg">Nama Toko</h3>
                         <p id="lokasiToko" class="text-xs text-gray-500 font-medium flex items-center gap-1">📍 Memuat lokasi...</p>
@@ -78,8 +88,39 @@
 
             <!-- Deskripsi -->
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                <h3 class="font-black text-gray-800 text-lg mb-4 border-b border-gray-100 pb-3">Deskripsi Produk</h3>
+                <h3 class="font-black text-gray-800 text-lg mb-4 border-b border-gray-100 pb-3 flex items-center gap-2"><span>📝</span> Deskripsi Produk</h3>
                 <p id="deskripsiProduk" class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+
+            <!-- Ulasan Produk -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                    <h3 class="font-black text-gray-800 text-lg flex items-center gap-2"><span>⭐</span> Ulasan Pembeli</h3>
+                    <span class="text-sm font-black text-amber-500" id="ratingInfo">⭐ 0.0 / 5</span>
+                </div>
+                
+                <div id="wadahUlasan" class="space-y-4 mb-6">
+                    <p class="text-xs text-gray-400 text-center py-4">Memuat ulasan...</p>
+                </div>
+                
+                <!-- Form Tulis Ulasan -->
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                    <h4 class="text-xs font-black text-gray-800 mb-2">Tulis Penilaian Anda</h4>
+                    <form onsubmit="kirimUlasan(event)" class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-bold text-gray-600">Bintang:</label>
+                            <select id="inputRating" class="border border-gray-300 rounded-lg px-2 py-1 text-xs outline-none bg-white font-bold text-amber-500">
+                                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                <option value="3">⭐⭐⭐ (3/5)</option>
+                                <option value="2">⭐⭐ (2/5)</option>
+                                <option value="1">⭐ (1/5)</option>
+                            </select>
+                        </div>
+                        <textarea id="inputIsiUlasan" required rows="2" placeholder="Bagaimana kualitas produk ini?" class="w-full border border-gray-300 rounded-xl p-2.5 text-xs outline-none focus:border-green-500 bg-white"></textarea>
+                        <button type="submit" id="btnKirimUlasan" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm">Kirim Ulasan</button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -87,7 +128,6 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 sticky top-24">
                 
-                <!-- Info Harga Singkat -->
                 <div class="mb-6 border-b border-gray-100 pb-4">
                     <h1 id="judulProduk" class="text-xl md:text-2xl font-black text-gray-800 mb-2 leading-tight">Nama Produk</h1>
                     <div id="wadahHargaAsli" class="hidden">
@@ -97,9 +137,8 @@
                     <p id="hargaProduk" class="text-3xl font-black text-green-600">Rp 0</p>
                 </div>
 
-                <form id="formPesanan" onsubmit="prosesBeliSekarang(event)" class="space-y-5">
+                <form id="formPesanan" class="space-y-5">
                     
-                    <!-- Kuantitas -->
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-2">Jumlah Pembelian <span class="text-red-500">*</span></label>
                         <div class="flex items-center w-32 border border-gray-300 rounded-xl overflow-hidden bg-white">
@@ -110,7 +149,6 @@
                         <p id="infoStok" class="text-[10px] text-gray-500 mt-1"></p>
                     </div>
 
-                    <!-- Identitas Pembeli -->
                     <div class="space-y-4 pt-4 border-t border-gray-100">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1">Nama Anda <span class="text-red-500">*</span></label>
@@ -126,7 +164,6 @@
                         </div>
                     </div>
 
-                    <!-- Opsi Layanan -->
                     <div class="space-y-4 pt-4 border-t border-gray-100">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-2">Metode Pengiriman <span class="text-red-500">*</span></label>
@@ -142,36 +179,65 @@
                         </div>
                     </div>
 
-                    <!-- Tombol Aksi (Tampil di Desktop, disembunyikan di Mobile) -->
                     <div class="pt-4 border-t border-gray-100 hidden md:block">
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-sm font-bold text-gray-600">Total Pembayaran:</span>
                             <span id="totalHargaTeks" class="text-xl font-black text-green-600">Rp 0</span>
                         </div>
-                        <button type="submit" id="btnBeliDesktop" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                            <span>🛒</span> Beli Sekarang
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="masukkanKeranjang()" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 rounded-xl shadow-md transition text-xs flex justify-center items-center gap-1">
+                                <span>🛒</span> + Keranjang
+                            </button>
+                            <button type="button" onclick="prosesBeliSekarang()" id="btnBeliDesktop" class="w-1/2 bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl shadow-md transition text-xs flex justify-center items-center gap-1">
+                                <span>⚡</span> Beli Langsung
+                            </button>
+                        </div>
                     </div>
 
                 </form>
             </div>
         </div>
+        
+        <!-- SECTION REKOMENDASI PRODUK (BAWAH) -->
+        <div class="lg:col-span-3 mt-4 space-y-10 border-t border-gray-200 pt-10">
+            
+            <!-- Produk Serupa -->
+            <div>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-black text-gray-800 flex items-center gap-2"><span>🔄</span> Produk Serupa</h3>
+                </div>
+                <div id="wadahProdukMirip" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div class="col-span-full text-center py-6 text-gray-400 text-xs font-bold">Mencari produk serupa...</div>
+                </div>
+            </div>
+
+            <!-- Produk Populer -->
+            <div>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-black text-gray-800 flex items-center gap-2"><span>🔥</span> Rekomendasi Paling Populer</h3>
+                </div>
+                <div id="wadahProdukPopuler" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div class="col-span-full text-center py-6 text-gray-400 text-xs font-bold">Memuat produk populer...</div>
+                </div>
+            </div>
+            
+        </div>
     </main>
 
-    <!-- TOMBOL BELI MELAYANG (KHUSUS HP) -->
-    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-40 flex items-center justify-between">
-        <div>
-            <p class="text-[10px] font-bold text-gray-500">Total Harga</p>
-            <p id="totalHargaMobile" class="text-lg font-black text-green-600 leading-none">Rp 0</p>
+    <!-- TOMBOL MOBILE MELAYANG -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 shadow-2xl z-40 flex items-center justify-between gap-2">
+        <div class="flex-shrink-0 mr-2">
+            <p class="text-[9px] font-bold text-gray-500 leading-tight">Total Harga</p>
+            <p id="totalHargaMobile" class="text-sm font-black text-green-600 leading-tight">Rp 0</p>
         </div>
-        <button onclick="document.getElementById('btnBeliDesktop').click()" class="bg-green-600 text-white font-black px-8 py-3 rounded-xl shadow-md">
-            Beli Sekarang
-        </button>
+        <div class="flex gap-2 w-full justify-end">
+            <button type="button" onclick="masukkanKeranjang()" class="bg-amber-500 text-white font-black px-4 py-3 rounded-xl shadow-md text-xs flex-1 whitespace-nowrap">+ Keranjang</button>
+            <button type="button" onclick="prosesBeliSekarang()" id="btnBeliMobile" class="bg-green-600 text-white font-black px-4 py-3 rounded-xl shadow-md text-xs flex-1 whitespace-nowrap">Beli Langsung</button>
+        </div>
     </div>
 
     <!-- SCRIPT UTAMA -->
     <script>
-        // --- KONFIGURASI SUPABASE ---
         const { createClient } = supabase;
         const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
         const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
@@ -179,59 +245,87 @@
 
         let dataProdukSistem = null;
         let hargaAktif = 0;
-
-        // 1. AMBIL ID DARI URL
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
 
-        // 2. FETCH DATA PRODUK
-        async function muatDetailProduk() {
-            if (!productId) {
-                tampilkanError();
-                return;
-            }
-
+        // Cek Login Navigasi
+        async function cekLoginNav() {
+            const wadahMenu = document.getElementById('wadahDropdownProfil');
             try {
-                // Tarik data produk beserta data tokonya
-                const { data: produk, error } = await supabaseClient
-                    .from('produk')
-                    .select('*, toko(*)')
-                    .eq('id', productId)
-                    .single();
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    const namaUserSingkat = user.email.split('@')[0];
+                    wadahMenu.innerHTML = `
+                        <div class="relative">
+                            <button onclick="toggleDropdownProfil()" class="flex items-center gap-2 focus:outline-none hover:bg-gray-100 p-1 rounded-lg transition">
+                                <img src="https://ui-avatars.com/api/?name=${namaUserSingkat}&background=16a34a&color=fff" class="w-8 h-8 rounded-full border border-gray-200 shadow-sm object-cover">
+                                <span class="text-[10px] text-gray-400">▼</span>
+                            </button>
+                            <div id="dropdownProfil" class="dropdown-menu absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                                <div class="px-4 py-3 bg-green-50 border-b border-green-100">
+                                    <p class="text-[10px] text-green-700 font-bold uppercase tracking-wider">Masuk sebagai</p>
+                                    <p class="text-xs font-black text-gray-800 truncate">${user.email}</p>
+                                </div>
+                                <div class="py-2">
+                                    <a href="dashboard.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">🏪 Buka Dashboard Toko</a>
+                                    <a href="pesanan-saya.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">📦 Pesanan Saya</a>
+                                    <a href="profil.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-green-600 transition flex items-center gap-2">⚙️ Pengaturan Akun</a>
+                                </div>
+                                <div class="border-t border-gray-100 py-1">
+                                    <button onclick="prosesKeluar()" class="w-full text-left px-4 py-2.5 text-xs font-black text-red-500 hover:bg-red-50 transition flex items-center gap-2">🚪 Keluar</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    wadahMenu.innerHTML = `<a href="login.html" class="text-xs font-bold text-white bg-green-600 px-4 py-2 rounded-lg shadow-sm">Masuk</a>`;
+                }
+            } catch (err) {}
+        }
 
+        function toggleDropdownProfil() { document.getElementById('dropdownProfil').classList.toggle('show'); }
+        window.onclick = function(event) {
+            if (!event.target.closest('#wadahDropdownProfil')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
+            }
+        }
+        async function prosesKeluar() { await supabaseClient.auth.signOut(); window.location.reload(); }
+
+        function updateBadgeKeranjang() {
+            let cart = JSON.parse(localStorage.getItem('lokalshop_cart')) || [];
+            document.getElementById('badgeKeranjangNav').innerText = cart.length;
+        }
+
+        // Muat Detail Produk
+        async function muatDetailProduk() {
+            if (!productId) { tampilkanError(); return; }
+            try {
+                const { data: produk, error } = await supabaseClient.from('produk').select('*, toko(*)').eq('id', productId).single();
                 if (error || !produk) throw error;
-
-                // PROTEKSI KEAMANAN: Jangan tampilkan jika belum disetujui Admin
-                if (produk.status_tampil !== 'Disetujui' && produk.status_tampil !== 'Aktif') {
-                    tampilkanError(); return;
-                }
-                if (produk.toko.status_verifikasi !== 'Disetujui' && produk.toko.status_verifikasi !== 'Aktif') {
-                    tampilkanError(); return;
-                }
+                if (produk.status_tampil !== 'Disetujui' && produk.status_tampil !== 'Aktif') { tampilkanError(); return; }
+                if (produk.toko.status_verifikasi !== 'Disetujui' && produk.toko.status_verifikasi !== 'Aktif') { tampilkanError(); return; }
 
                 dataProdukSistem = produk;
                 renderDataKeLayar();
-
-            } catch (err) {
-                console.error("Gagal muat produk:", err);
-                tampilkanError();
-            }
+                muatUlasan(produk.id);
+                muatProdukMirip(produk.kategori, produk.id);
+                muatProdukPopuler();
+                updateBadgeKeranjang();
+                cekLoginNav();
+            } catch (err) { tampilkanError(); }
         }
 
-        // 3. RENDER UI
         function renderDataKeLayar() {
             const p = dataProdukSistem;
             const t = p.toko;
 
-            // Sembunyikan loading, tampilkan konten
             document.getElementById('loadingState').classList.add('hidden');
             document.getElementById('kontenProduk').classList.remove('hidden');
 
-            // Set Data Produk
             document.getElementById('judulProduk').innerText = p.nama_produk;
             document.getElementById('deskripsiProduk').innerText = p.deskripsi || 'Tidak ada deskripsi.';
             
-            // Set Harga
             hargaAktif = p.harga_diskon > 0 ? p.harga_diskon : p.harga_normal;
             document.getElementById('hargaProduk').innerText = formatRp(hargaAktif);
             
@@ -240,122 +334,256 @@
                 document.getElementById('hargaAsli').innerText = formatRp(p.harga_normal);
             }
 
-            // Set Stok
             const inputQty = document.getElementById('inputQty');
             inputQty.max = p.stok;
             document.getElementById('infoStok').innerText = `Tersisa ${p.stok} buah`;
+            
             if (p.stok <= 0) {
                 document.getElementById('badgeStok').innerText = "Habis Terjual";
                 document.getElementById('badgeStok').className = "absolute top-4 right-4 bg-gray-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md";
                 document.getElementById('btnBeliDesktop').disabled = true;
-                document.getElementById('btnBeliDesktop').innerText = "Stok Habis";
-                document.getElementById('btnBeliDesktop').classList.replace('bg-green-600', 'bg-gray-400');
+                document.getElementById('btnBeliMobile').disabled = true;
             }
 
-            // Set Foto
             const fotoUtama = p.foto1 || 'https://via.placeholder.com/600';
             document.getElementById('fotoUtama').src = fotoUtama;
             
-            // Render Thumbnail Galeri
-            let htmlThumb = `<img src="${fotoUtama}" onclick="gantiFoto('${fotoUtama}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 border-green-500">`;
-            if (p.foto2) htmlThumb += `<img src="${p.foto2}" onclick="gantiFoto('${p.foto2}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border border-gray-200 hover:border-green-500 transition">`;
-            if (p.foto3) htmlThumb += `<img src="${p.foto3}" onclick="gantiFoto('${p.foto3}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border border-gray-200 hover:border-green-500 transition">`;
+            let htmlThumb = `<img src="${fotoUtama}" onclick="gantiFoto('${fotoUtama}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 border-green-500 flex-shrink-0">`;
+            if (p.foto2) htmlThumb += `<img src="${p.foto2}" onclick="gantiFoto('${p.foto2}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border border-gray-200 flex-shrink-0">`;
+            if (p.foto3) htmlThumb += `<img src="${p.foto3}" onclick="gantiFoto('${p.foto3}')" class="w-16 h-16 object-cover rounded-xl cursor-pointer border border-gray-200 flex-shrink-0">`;
             document.getElementById('galeriThumb').innerHTML = htmlThumb;
 
-            // Set Data Toko
             document.getElementById('namaToko').innerText = t.nama_toko;
-            document.getElementById('lokasiToko').innerHTML = `📍 ${t.kecamatan}, Trenggalek`;
+            document.getElementById('lokasiToko').innerHTML = `📍 ${t.kecamatan || 'Trenggalek'}`;
             document.getElementById('logoToko').src = t.logo_toko || 'https://via.placeholder.com/100';
             document.getElementById('linkToko').href = `toko.html?id=${t.id}`;
 
-            // Set Opsi Pengiriman (Split string dari database)
-            const opsiKirim = t.metode_pengiriman || 'Diambil Ke Tempat (Pickup)';
-            document.getElementById('opsiPengiriman').innerHTML = opsiKirim.split(',').map(met => `<option value="${met.trim()}">${met.trim()}</option>`).join('');
-
-            // Set Opsi Pembayaran (Split string dari database)
-            const opsiBayar = t.metode_pembayaran || 'COD / Tunai';
-            document.getElementById('opsiPembayaran').innerHTML = opsiBayar.split(',').map(met => `<option value="${met.trim()}">${met.trim()}</option>`).join('');
+            document.getElementById('opsiPengiriman').innerHTML = (t.metode_pengiriman || 'Pickup').split(',').map(m => `<option value="${m.trim()}">${m.trim()}</option>`).join('');
+            document.getElementById('opsiPembayaran').innerHTML = (t.metode_pembayaran || 'Tunai').split(',').map(m => `<option value="${m.trim()}">${m.trim()}</option>`).join('');
 
             hitungTotal();
         }
 
-        // 4. LOGIKA FORM PEMESANAN
-        function gantiFoto(url) { document.getElementById('fotoUtama').src = url; }
-        function formatRp(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
-        
-        function ubahQty(nilai) {
-            const input = document.getElementById('inputQty');
-            let current = parseInt(input.value) || 1;
-            let max = parseInt(input.max) || 999;
-            let hasil = current + nilai;
-            if (hasil < 1) hasil = 1;
-            if (hasil > max) hasil = max;
-            input.value = hasil;
-            hitungTotal();
+        // ==========================================
+        // 🌟 FITUR ULASAN PRODUK 
+        // ==========================================
+        async function muatUlasan(idProduk) {
+            const wadah = document.getElementById('wadahUlasan');
+            try {
+                const { data: listUlasan, error } = await supabaseClient
+                    .from('ulasan')
+                    .select('*')
+                    .eq('produk_id', idProduk)
+                    .order('created_at', { ascending: false });
+
+                if (error || !listUlasan || listUlasan.length === 0) {
+                    wadah.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Belum ada ulasan untuk produk ini.</p>`;
+                    document.getElementById('ratingInfo').innerText = `⭐ 0.0 / 5 (0 Ulasan)`;
+                    return;
+                }
+
+                let totalBintang = 0;
+                listUlasan.forEach(u => totalBintang += u.rating);
+                let rataRata = (totalBintang / listUlasan.length).toFixed(1);
+                document.getElementById('ratingInfo').innerText = `⭐ ${rataRata} / 5 (${listUlasan.length} Ulasan)`;
+
+                wadah.innerHTML = listUlasan.map(u => {
+                    let bintang = '⭐'.repeat(u.rating);
+                    return `
+                        <div class="border-b border-gray-100 pb-3 last:border-0">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-xs text-gray-800">${u.nama_pembeli}</span>
+                                <span class="text-xs">${bintang}</span>
+                            </div>
+                            <p class="text-xs text-gray-600">${u.isi_ulasan}</p>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                wadah.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Belum ada ulasan.</p>`;
+            }
         }
 
-        function hitungTotal() {
-            const qty = parseInt(document.getElementById('inputQty').value) || 1;
-            const total = qty * hargaAktif;
-            document.getElementById('totalHargaTeks').innerText = formatRp(total);
-            document.getElementById('totalHargaMobile').innerText = formatRp(total);
-        }
-
-        // 5. EKSEKUSI PEMBELIAN KE DATABASE & WHATSAPP
-        async function prosesBeliSekarang(event) {
+        async function kirimUlasan(event) {
             event.preventDefault();
-            const btn = document.getElementById('btnBeliDesktop');
-            btn.innerText = "Memproses Pesanan...";
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                alert("Harap masuk (login) terlebih dahulu untuk memberikan ulasan.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            const btn = document.getElementById('btnKirimUlasan');
+            btn.innerText = "Mengirim...";
             btn.disabled = true;
 
-            const qty = parseInt(document.getElementById('inputQty').value);
-            const totalHarga = qty * hargaAktif;
-            
-            const dataPesanan = {
-                toko_id: dataProdukSistem.toko_id,
-                produk_id: dataProdukSistem.id,
-                nama_pembeli: document.getElementById('inputNamaPembeli').value,
-                alamat: document.getElementById('inputAlamat').value,
-                catatan: document.getElementById('inputCatatan').value,
-                qty: qty,
-                total_harga: totalHarga,
-                status: 'Menunggu Konfirmasi', // Masuk ke dashboard admin & penjual
-                
-                // Menyimpan pilihan metode di kolom catatan tambahan (karena tabel pesanan sebelumnya tidak punya kolom spesifik ini)
-                catatan: `Kirim: ${document.getElementById('opsiPengiriman').value} | Bayar: ${document.getElementById('opsiPembayaran').value} | Note: ${document.getElementById('inputCatatan').value}`
-            };
+            const rating = parseInt(document.getElementById('inputRating').value);
+            const isi = document.getElementById('inputIsiUlasan').value;
+            const nama = user.user_metadata?.full_name || user.email.split('@')[0];
 
             try {
-                // Simpan ke Supabase
-                const { error } = await supabaseClient.from('pesanan').insert([dataPesanan]);
+                const { error } = await supabaseClient.from('ulasan').insert([{
+                    produk_id: productId,
+                    email_pembeli: user.email,
+                    nama_pembeli: nama,
+                    rating: rating,
+                    isi_ulasan: isi
+                }]);
+
                 if (error) throw error;
 
-                // Format Pesan WhatsApp
-                const noWa = dataProdukSistem.toko.no_whatsapp;
-                const namaToko = dataProdukSistem.toko.nama_toko;
-                
-                let pesanWa = `Halo Admin *${namaToko}*, saya memesan produk dari Lokal Shop:\n\n`;
-                pesanWa += `📦 *Produk:* ${dataProdukSistem.nama_produk}\n`;
-                pesanWa += `🔢 *Jumlah:* ${qty} pcs\n`;
-                pesanWa += `💵 *Total Harga:* ${formatRp(totalHarga)}\n`;
-                pesanWa += `🚚 *Pengiriman:* ${document.getElementById('opsiPengiriman').value}\n`;
-                pesanWa += `💳 *Pembayaran:* ${document.getElementById('opsiPembayaran').value}\n\n`;
-                pesanWa += `👤 *Nama:* ${dataPesanan.nama_pembeli}\n`;
-                pesanWa += `📍 *Alamat:* ${document.getElementById('inputAlamat').value}\n`;
-                if(document.getElementById('inputCatatan').value) {
-                    pesanWa += `📝 *Catatan:* ${document.getElementById('inputCatatan').value}\n`;
-                }
-                pesanWa += `\nMohon konfirmasinya ya!`;
-
-                // Redirect ke WhatsApp
-                const linkWa = `https://wa.me/${noWa}?text=${encodeURIComponent(pesanWa)}`;
-                window.location.href = linkWa;
+                alert("✅ Terima kasih! Ulasan Anda berhasil dikirim.");
+                document.getElementById('inputIsiUlasan').value = '';
+                muatUlasan(productId); // Refresh ulasan
 
             } catch (err) {
                 console.error(err);
-                alert("Gagal memproses pesanan. Silakan periksa koneksi Anda.");
-                btn.innerText = "Beli Sekarang";
+                alert("Gagal mengirim ulasan.");
+            } finally {
+                btn.innerText = "Kirim Ulasan";
                 btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // 🌟 REKOMENDASI PRODUK (SERUPA & POPULER)
+        // ==========================================
+        async function muatProdukMirip(kategori, idSekarang) {
+            const wadah = document.getElementById('wadahProdukMirip');
+            try {
+                const { data, error } = await supabaseClient.from('produk').select('*, toko!inner(nama_toko, kecamatan, status_verifikasi)')
+                    .eq('kategori', kategori).neq('id', idSekarang).in('status_tampil', ['Disetujui', 'Aktif']).in('toko.status_verifikasi', ['Disetujui', 'Aktif']).limit(5);
+
+                if (error || !data || data.length === 0) {
+                    wadah.innerHTML = `<div class="col-span-full text-center py-6 text-gray-400 text-xs font-medium">Tidak ada produk serupa saat ini.</div>`;
+                    return;
+                }
+                renderGridProduk(data, wadah);
+            } catch (e) { wadah.innerHTML = ''; }
+        }
+
+        async function muatProdukPopuler() {
+            const wadah = document.getElementById('wadahProdukPopuler');
+            try {
+                const { data, error } = await supabaseClient.from('produk').select('*, toko!inner(nama_toko, kecamatan, status_verifikasi)')
+                    .in('status_tampil', ['Disetujui', 'Aktif']).in('toko.status_verifikasi', ['Disetujui', 'Aktif'])
+                    .order('created_at', { ascending: true }) // Sebagai dummy produk populer
+                    .limit(5);
+
+                if (error || !data || data.length === 0) {
+                    wadah.innerHTML = `<div class="col-span-full text-center py-6 text-gray-400 text-xs font-medium">Belum ada data populer.</div>`;
+                    return;
+                }
+                renderGridProduk(data, wadah);
+            } catch (e) { wadah.innerHTML = ''; }
+        }
+
+        function renderGridProduk(dataProduk, elemenWadah) {
+            elemenWadah.innerHTML = dataProduk.map(p => {
+                const hargaFix = p.harga_diskon > 0 ? p.harga_diskon : p.harga_normal;
+                const hargaRp = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(hargaFix);
+                const urlFoto = p.foto1 || 'https://via.placeholder.com/300x300';
+                
+                let elemenHargaAsli = '';
+                if(p.harga_diskon > 0 && p.harga_diskon < p.harga_normal) {
+                    const hargaCoret = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(p.harga_normal);
+                    elemenHargaAsli = `<span class="text-[9px] text-gray-400 line-through block -mb-1">${hargaCoret}</span>`;
+                }
+
+                return `
+                    <a href="detail-produk.html?id=${p.id}" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full">
+                        <div class="aspect-square bg-gray-100 overflow-hidden relative">
+                            <img src="${urlFoto}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="p-3 flex flex-col flex-grow">
+                            <h3 class="font-bold text-gray-800 text-[10px] sm:text-xs line-clamp-2 mb-2 group-hover:text-green-700 transition">${p.nama_produk}</h3>
+                            <div class="mt-auto">
+                                ${elemenHargaAsli}
+                                <p class="text-green-600 font-black text-xs sm:text-sm">${hargaRp}</p>
+                                <div class="mt-2 pt-2 border-t border-gray-50 flex items-center gap-1 text-[8px] sm:text-[9px] text-gray-500 font-medium">
+                                    <span class="truncate bg-gray-50 px-1 py-0.5 rounded">🏪 ${p.toko.nama_toko}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Utilitas Checkout & Cart
+        function gantiFoto(url) { document.getElementById('fotoUtama').src = url; }
+        function formatRp(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
+        function ubahQty(n) {
+            const inp = document.getElementById('inputQty');
+            let v = (parseInt(inp.value) || 1) + n;
+            if (v < 1) v = 1;
+            if (v > inp.max) v = inp.max;
+            inp.value = v;
+            hitungTotal();
+        }
+        function hitungTotal() {
+            const t = parseInt(document.getElementById('inputQty').value) * hargaAktif;
+            document.getElementById('totalHargaTeks').innerText = formatRp(t);
+            document.getElementById('totalHargaMobile').innerText = formatRp(t);
+        }
+
+        function masukkanKeranjang() {
+            if(!dataProdukSistem) return;
+            const q = parseInt(document.getElementById('inputQty').value);
+            const item = {
+                id_produk: dataProdukSistem.id, nama_produk: dataProdukSistem.nama_produk,
+                harga: hargaAktif, qty: q, foto: dataProdukSistem.foto1,
+                id_toko: dataProdukSistem.toko.id, nama_toko: dataProdukSistem.toko.nama_toko,
+                no_wa: dataProdukSistem.toko.no_whatsapp,
+                opsi_kirim: document.getElementById('opsiPengiriman').value,
+                opsi_bayar: document.getElementById('opsiPembayaran').value
+            };
+            let c = JSON.parse(localStorage.getItem('lokalshop_cart')) || [];
+            let ex = c.find(i => i.id_produk === item.id_produk);
+            if(ex) ex.qty += q; else c.push(item);
+            localStorage.setItem('lokalshop_cart', JSON.stringify(c));
+            updateBadgeKeranjang();
+            alert('🛒 Berhasil ditambahkan ke keranjang!');
+        }
+
+        async function prosesBeliSekarang() {
+            const form = document.getElementById('formPesanan');
+            if(!form.checkValidity()) { form.reportValidity(); return; }
+
+            const btn = document.getElementById('btnBeliDesktop');
+            const btnMob = document.getElementById('btnBeliMobile');
+            if(btn) { btn.innerText = "Memproses..."; btn.disabled = true; }
+            if(btnMob) { btnMob.innerText = "Memproses..."; btnMob.disabled = true; }
+
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                const emailUser = user ? user.email : null;
+                const qty = parseInt(document.getElementById('inputQty').value);
+                const totalHarga = qty * hargaAktif;
+
+                const dataPesanan = {
+                    toko_id: dataProdukSistem.toko_id,
+                    produk_id: dataProdukSistem.id,
+                    nama_pembeli: document.getElementById('inputNamaPembeli').value,
+                    alamat: document.getElementById('inputAlamat').value,
+                    qty: qty,
+                    total_harga: totalHarga,
+                    status: 'Menunggu Konfirmasi',
+                    email_pembeli: emailUser,
+                    catatan: `Kirim: ${document.getElementById('opsiPengiriman').value} | Bayar: ${document.getElementById('opsiPembayaran').value} | Note: ${document.getElementById('inputCatatan').value}`
+                };
+
+                const { error } = await supabaseClient.from('pesanan').insert([dataPesanan]);
+                if (error) throw error;
+
+                const noWa = dataProdukSistem.toko.no_whatsapp;
+                let pesanWa = `Halo Admin *${dataProdukSistem.toko.nama_toko}*, saya memesan produk:\n\n📦 *${dataProdukSistem.nama_produk}* (x${qty})\n💵 Total: ${formatRp(totalHarga)}\n\n👤 Nama: ${dataPesanan.nama_pembeli}\n📍 Alamat: ${dataPesanan.alamat}\n\nMohon konfirmasinya ya!`;
+                window.location.href = `https://wa.me/${noWa}?text=${encodeURIComponent(pesanWa)}`;
+            } catch (err) {
+                alert("Gagal memproses pesanan.");
+                if(btn) { btn.innerHTML = "<span>⚡</span> Beli Langsung"; btn.disabled = false; }
+                if(btnMob) { btnMob.innerText = "Beli Langsung"; btnMob.disabled = false; }
             }
         }
 
@@ -364,7 +592,6 @@
             document.getElementById('errorState').classList.remove('hidden');
         }
 
-        // START
         muatDetailProduk();
     </script>
 </body>

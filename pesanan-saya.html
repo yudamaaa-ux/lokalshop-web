@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesanan Saya - LOKAL SHOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .tab-aktif { color: #16a34a; border-bottom: 2px solid #16a34a; font-weight: 900; }
+        .tab-nonaktif { color: #6b7280; font-weight: 700; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen">
+
+    <!-- NAVIGASI UTAMA -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 text-gray-500 hover:text-green-600 transition font-bold text-sm">
+                <span>← Kembali</span>
+            </a>
+            <h1 class="text-lg font-black text-gray-800">Pesanan Saya</h1>
+            <div class="w-16"></div> <!-- Spacer -->
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        
+        <!-- HEADER & TABS STATUS -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 sticky top-[60px] z-40">
+            <div class="flex overflow-x-auto scrollbar-hide">
+                <button onclick="filterPesanan('Semua')" id="tab-Semua" class="flex-1 min-w-[100px] py-4 text-xs tab-aktif transition">Semua</button>
+                <button onclick="filterPesanan('Berlangsung')" id="tab-Berlangsung" class="flex-1 min-w-[100px] py-4 text-xs tab-nonaktif transition">Berlangsung</button>
+                <button onclick="filterPesanan('Selesai')" id="tab-Selesai" class="flex-1 min-w-[100px] py-4 text-xs tab-nonaktif transition">Selesai</button>
+                <button onclick="filterPesanan('Dibatalkan')" id="tab-Dibatalkan" class="flex-1 min-w-[100px] py-4 text-xs tab-nonaktif transition">Dibatalkan</button>
+            </div>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div id="loadingState" class="text-center py-20 animate-pulse">
+            <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-500 text-sm font-bold">Memuat riwayat pesanan...</p>
+        </div>
+
+        <!-- KOSONG STATE -->
+        <div id="kosongState" class="hidden text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <span class="text-6xl block mb-4">📦</span>
+            <h2 class="text-xl font-black text-gray-800 mb-2">Belum Ada Pesanan</h2>
+            <p class="text-gray-500 text-sm mb-6">Anda belum pernah melakukan pemesanan apapun.</p>
+            <a href="index.html" class="bg-green-600 text-white font-bold px-6 py-3 rounded-xl shadow-md">Mulai Belanja</a>
+        </div>
+
+        <!-- WADAH DAFTAR PESANAN -->
+        <div id="wadahPesanan" class="space-y-4">
+            <!-- Diisi oleh JS -->
+        </div>
+
+    </main>
+
+    <!-- SCRIPT UTAMA -->
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://snclpxrtxjwefzrmkylo.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Sw_2GbforFsxCsf8zIwDJw_a3XuRnjl';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        let dataPesananGlobal = [];
+        let emailPengguna = null;
+
+        // FORMAT RUPIAH
+        const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        // 1. CEK LOGIN & AMBIL PESANAN
+        async function inisialisasi() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                alert("Harap masuk (login) terlebih dahulu untuk melihat pesanan Anda.");
+                window.location.href = "login.html";
+                return;
+            }
+            emailPengguna = user.email;
+            muatPesanan();
+        }
+
+        async function muatPesanan() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('wadahPesanan').innerHTML = '';
+            document.getElementById('kosongState').classList.add('hidden');
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('pesanan')
+                    .select('*, toko(nama_toko, no_whatsapp), produk(nama_produk, foto1)')
+                    .eq('email_pembeli', emailPengguna)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                dataPesananGlobal = data;
+                filterPesanan('Semua');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-bold">Gagal memuat pesanan. Periksa koneksi internet.</p>`;
+            }
+        }
+
+        // 2. FILTER & RENDER
+        function filterPesanan(kategori) {
+            // Update UI Tab
+            ['Semua', 'Berlangsung', 'Selesai', 'Dibatalkan'].forEach(id => {
+                document.getElementById(`tab-${id}`).className = `flex-1 min-w-[100px] py-4 text-xs transition ${id === kategori ? 'tab-aktif' : 'tab-nonaktif'}`;
+            });
+
+            document.getElementById('loadingState').classList.add('hidden');
+
+            // Filter Data
+            let dataRender = dataPesananGlobal;
+            if (kategori === 'Berlangsung') {
+                dataRender = dataPesananGlobal.filter(p => p.status !== 'Selesai' && p.status !== 'Dibatalkan');
+            } else if (kategori !== 'Semua') {
+                dataRender = dataPesananGlobal.filter(p => p.status === kategori);
+            }
+
+            // Tampilkan Kosong Jika Tidak Ada
+            if (dataRender.length === 0) {
+                document.getElementById('wadahPesanan').innerHTML = '';
+                document.getElementById('kosongState').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('kosongState').classList.add('hidden');
+
+            // Render HTML
+            document.getElementById('wadahPesanan').innerHTML = dataRender.map(p => {
+                const foto = p.produk ? p.produk.foto1 : 'https://via.placeholder.com/150';
+                const namaBarang = p.produk ? p.produk.nama_produk : 'Produk Telah Dihapus';
+                const namaToko = p.toko ? p.toko.nama_toko : 'Toko Lokal Shop';
+                const noWa = p.toko ? p.toko.no_whatsapp : '';
+                
+                // Warna Badge Status
+                let warnaBadge = 'bg-gray-100 text-gray-600';
+                if(p.status === 'Menunggu Konfirmasi') warnaBadge = 'bg-yellow-100 text-yellow-700';
+                if(p.status === 'Diproses') warnaBadge = 'bg-blue-100 text-blue-700';
+                if(p.status === 'Dikirim') warnaBadge = 'bg-purple-100 text-purple-700';
+                if(p.status === 'Selesai') warnaBadge = 'bg-green-100 text-green-700';
+                if(p.status === 'Dibatalkan') warnaBadge = 'bg-red-100 text-red-700';
+
+                // Tombol Aksi
+                let tombolAksi = `<a href="https://wa.me/${noWa}" target="_blank" class="text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition">💬 Chat Penjual</a>`;
+                
+                if (p.status === 'Dikirim') {
+                    tombolAksi += `<button onclick="selesaikanPesanan('${p.id}')" class="text-xs font-bold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg shadow-sm transition">✅ Terima Barang</button>`;
+                }
+
+                return `
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">🏪</span>
+                                <span class="text-xs font-black text-gray-800">${namaToko}</span>
+                            </div>
+                            <span class="text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${warnaBadge}">${p.status}</span>
+                        </div>
+                        
+                        <div class="p-4 flex gap-4">
+                            <img src="${foto}" class="w-20 h-20 object-cover rounded-xl border border-gray-100">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-sm text-gray-800 line-clamp-2">${namaBarang}</h3>
+                                <p class="text-xs text-gray-500 mt-1">Jumlah: ${p.qty} pcs</p>
+                                <p class="text-xs text-gray-400 mt-1 max-w-[200px] truncate">${p.catatan}</p>
+                            </div>
+                        </div>
+
+                        <div class="px-4 py-3 border-t border-gray-50 flex flex-wrap justify-between items-center gap-3">
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Total Belanja</p>
+                                <p class="text-sm font-black text-green-600">${formatRp(p.total_harga)}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                ${tombolAksi}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 3. UBAH STATUS JADI SELESAI
+        async function selesaikanPesanan(idPesanan) {
+            if(!confirm("Apakah Anda yakin sudah menerima barang ini dengan baik?")) return;
+            
+            try {
+                const { error } = await supabaseClient.from('pesanan').update({ status: 'Selesai' }).eq('id', idPesanan);
+                if (error) throw error;
+                
+                alert("Berhasil! Terima kasih telah berbelanja.");
+                muatPesanan(); // Refresh data
+            } catch (err) {
+                console.error(err);
+                alert("Gagal memperbarui status pesanan.");
+            }
+        }
+
+        // START
+        inisialisasi();
+    </script>
+</body>
+</html>

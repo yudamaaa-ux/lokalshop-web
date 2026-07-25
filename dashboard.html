@@ -6,6 +6,12 @@
     <title>Kelola Toko - LOKAL SHOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- [BARU] TAMBAHAN CSS UNTUK DROPDOWN PROFIL -->
+    <style>
+        .dropdown-menu { display: none; opacity: 0; transform: translateY(-10px); transition: all 0.2s ease-out; }
+        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0); }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen pb-20">
 
@@ -15,8 +21,11 @@
                 <div class="w-8 h-8 bg-indigo-600 text-white flex items-center justify-center rounded-lg font-black text-sm shadow-md">⚙️</div>
                 <span class="text-xl font-black text-indigo-900 tracking-tight hidden sm:block">PANEL<span class="text-indigo-500">PENJUAL</span></span>
             </a>
-            <div class="flex gap-3">
+            
+            <!-- [DIPERBARUI] WADAH UNTUK TOMBOL BERANDA & DROPDOWN PROFIL -->
+            <div class="flex items-center gap-3">
                 <a href="index.html" class="text-xs font-bold text-gray-500 hover:text-indigo-600 transition bg-gray-100 px-3 py-1.5 rounded-lg">← Beranda Utama</a>
+                <div id="wadahDropdownProfil"></div>
             </div>
         </div>
     </nav>
@@ -262,6 +271,25 @@
         let akunUser = null;
         let dataTokoSaya = null;
 
+        // FUNGSI DROPDOWN & LOGOUT BARU
+        function toggleDropdownProfil() { 
+            document.getElementById('dropdownProfil').classList.toggle('show'); 
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('#wadahDropdownProfil')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) { 
+                    dropdowns[i].classList.remove('show'); 
+                }
+            }
+        }
+
+        async function prosesKeluar() { 
+            await supabaseClient.auth.signOut(); 
+            window.location.href = "login.html"; 
+        }
+
         // FUNGSI UPLOAD FILE KE STORAGE SUPABASE
         async function uploadGambarKeSupabase(inputId, folderName) {
             const fileInput = document.getElementById(inputId);
@@ -306,6 +334,34 @@
                 if (!user) { window.location.href = "login.html"; return; }
                 akunUser = user;
 
+                // --- [BARU] RENDER DROPDOWN MENU PROFIL ---
+                const namaUserSingkat = user.email.split('@')[0];
+                document.getElementById('wadahDropdownProfil').innerHTML = `
+                    <div class="relative">
+                        <button onclick="toggleDropdownProfil()" class="flex items-center gap-2 focus:outline-none hover:bg-gray-100 p-1 rounded-lg transition">
+                            <img src="https://ui-avatars.com/api/?name=${namaUserSingkat}&background=4f46e5&color=fff" class="w-8 h-8 rounded-full border border-gray-200 shadow-sm object-cover">
+                            <span class="text-[10px] text-gray-400 hidden sm:block">▼</span>
+                        </button>
+                        
+                        <div id="dropdownProfil" class="dropdown-menu absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                            <div class="px-4 py-3 bg-indigo-50 border-b border-indigo-100">
+                                <p class="text-[10px] text-indigo-700 font-bold uppercase tracking-wider">Masuk sebagai</p>
+                                <p class="text-xs font-black text-gray-800 truncate">${user.email}</p>
+                            </div>
+                            <div class="py-2">
+                                <a href="index.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition flex items-center gap-2">🏠 Beranda Utama</a>
+                                <a href="pesanan-saya.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition flex items-center gap-2">📦 Pesanan Saya</a>
+                                <a href="favorit.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition flex items-center gap-2">❤️ Barang Favorit</a>
+                                <a href="profil.html" class="block px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition flex items-center gap-2">⚙️ Pengaturan Akun</a>
+                            </div>
+                            <div class="border-t border-gray-100 py-1">
+                                <button onclick="prosesKeluar()" class="w-full text-left px-4 py-2.5 text-xs font-black text-red-500 hover:bg-red-50 transition flex items-center gap-2">🚪 Keluar (Logout)</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // ------------------------------------------
+
                 const { data: toko, error } = await supabaseClient.from('toko').select('*').eq('user_id', user.id).single();
                 document.getElementById('loadingDashboard').classList.add('hidden');
 
@@ -315,7 +371,7 @@
                     dataTokoSaya = toko;
                     document.getElementById('wrapperDashboard').classList.remove('hidden');
                     
-                    // -- [BARU] LOGIKA TAMPILAN STATUS VERIFIKASI TOKO --
+                    // -- LOGIKA TAMPILAN STATUS VERIFIKASI TOKO --
                     const teksNamaToko = document.getElementById('teksNamaToko');
                     const alertVerifikasi = document.getElementById('alertVerifikasiToko');
                     
@@ -392,7 +448,6 @@
                     const hargaFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(hrg);
                     const foto = p.foto1 || p.foto_url || 'https://via.placeholder.com/50';
 
-                    // -- [BARU] LENCANA STATUS PRODUK --
                     let badgeProduk = '';
                     if (p.status_tampil === 'Disetujui' || p.status_tampil === 'Aktif') {
                         badgeProduk = '<span class="bg-emerald-100 text-emerald-700 border border-emerald-300 text-[9px] px-2 py-0.5 rounded font-bold ml-2">✅ Aktif</span>';
@@ -401,7 +456,6 @@
                     } else {
                         badgeProduk = '<span class="bg-amber-100 text-amber-700 border border-amber-300 text-[9px] px-2 py-0.5 rounded font-bold ml-2">⏳ Menunggu Verifikasi</span>';
                     }
-                    // ----------------------------------
 
                     tabel.innerHTML += `
                         <tr class="border-b hover:bg-gray-50 transition">
@@ -423,7 +477,7 @@
             } catch (err) { console.error("Gagal muat katalog"); }
         }
 
-        // SIMPAN PRODUK BARU (DENGAN UPLOAD GAMBAR OTOMATIS)
+        // SIMPAN PRODUK BARU
         async function simpanProdukBaru(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSimpanProduk');
@@ -431,14 +485,12 @@
             btn.disabled = true;
 
             try {
-                // 1. Upload Gambar dulu
                 const urlFoto1 = await uploadGambarKeSupabase('addFoto1', 'produk');
                 const urlFoto2 = await uploadGambarKeSupabase('addFoto2', 'produk');
                 const urlFoto3 = await uploadGambarKeSupabase('addFoto3', 'produk');
 
                 if (!urlFoto1) throw new Error("Foto utama wajib diupload.");
 
-                // 2. Simpan Data ke Database
                 const nama = document.getElementById('addNama').value;
                 const kategori = document.getElementById('addKategori').value;
                 const stok = document.getElementById('addStok').value;
@@ -457,10 +509,7 @@
                     foto1: urlFoto1, 
                     foto2: urlFoto2,
                     foto3: urlFoto3,
-                    
-                    // -- [BARU] PRODUK BARU OTOMATIS MENUNGGU VERIFIKASI --
                     status_tampil: 'Menunggu Verifikasi'
-                    // -----------------------------------------------------
                 }]);
 
                 if (error) throw error;
@@ -566,7 +615,7 @@
             } catch (err) { alert("Gagal mengubah status pesanan."); }
         }
 
-        // UPDATE PROFIL TOKO LENGKAP (DENGAN UPLOAD LOGO & BANNER)
+        // UPDATE PROFIL TOKO LENGKAP
         async function updateProfilToko(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSimpanProfil');
@@ -574,7 +623,6 @@
             btn.disabled = true;
             
             try {
-                // Cek apakah user mengupload gambar baru
                 const urlLogoBaru = await uploadGambarKeSupabase('editLogo', 'toko') || dataTokoSaya.logo_toko;
                 const urlBannerBaru = await uploadGambarKeSupabase('editBanner', 'toko') || dataTokoSaya.banner_toko;
 
@@ -599,7 +647,6 @@
                 
                 alert("Profil toko berhasil diperbarui secara menyeluruh!");
                 
-                // Update UI lokal
                 document.getElementById('teksNamaToko').innerText = updates.nama_toko;
                 if(urlLogoBaru) {
                     document.getElementById('headerLogoToko').src = urlLogoBaru;
@@ -607,7 +654,6 @@
                 }
                 if(urlBannerBaru) { document.getElementById('previewBanner').src = urlBannerBaru; }
                 
-                // Perbarui data variabel
                 dataTokoSaya = { ...dataTokoSaya, ...updates };
 
             } catch (err) {
