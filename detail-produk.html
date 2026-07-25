@@ -578,7 +578,7 @@
                 if (error) throw error;
 
                 const noWa = dataProdukSistem.toko.no_whatsapp;
-                let pesanWa = `Halo Admin *${dataProdukSistem.toko.nama_toko}*, saya memesan produk:\n\n📦 *${dataProdukSistem.nama_produk}* (x${qty})\n💵 Total: ${formatRp(totalHarga)}\n\n👤 Nama: ${dataPesanan.nama_pembeli}\n📍 Alamat: ${dataPesanan.alamat}\n\nMohon konfirmasinya ya!`;
+                let pesanWa = `Halo Admin *${dataProdukSistem.toko.nama_toko}*, saya memesan produk:\n\n📦 *${dataProdukSistem.nama_produk}* (x${qty})\n💵 Total: ${formatRp(totalHarga)}\n\n👤 Nama: ${dataPesanan.nama_pembeli}\n📍 Alamat: ${dataPesanan.alamat}\n\n!!! Mohon konfirmasinya di dalam dashboard toko ya - klik pesanan masuk!!! untuk konfirmasi pesanan ke pembeli... terimakasih...`;
                 window.location.href = `https://wa.me/${noWa}?text=${encodeURIComponent(pesanWa)}`;
             } catch (err) {
                 alert("Gagal memproses pesanan.");
