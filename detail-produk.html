@@ -547,6 +547,46 @@
             alert('🛒 Berhasil ditambahkan ke keranjang!');
         }
 
+        // --- FUNGSI BARU YANG DITAMBAHKAN ---
+        function buatPesanWhatsApp(data) {
+            // 1. Hitung Subtotal secara otomatis (Harga per Pcs x Jumlah Qty)
+            const hargaSatuan = Number(data.hargaProduk) || 0;
+            const jumlahQty = Number(data.qty) || 1;
+            const totalHarga = hargaSatuan * jumlahQty;
+
+            // 2. Format Angka ke Rupiah
+            const formatRupiah = (angka) => 
+                new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+            // 3. Susun Template Pesan (Versi Disederhanakan)
+            const pesan = `Halo Admin *${data.namaToko || 'Toko'}*, saya memesan produk dari Lokal Shop:
+
+📦 *${data.namaProduk}* (x${jumlahQty})
+   Harga: ${formatRupiah(hargaSatuan)}
+   Kirim: ${data.opsiPengiriman || 'Diambil Ke Tempat (Pickup)'}
+   Bayar: ${data.metodePembayaran || 'COD / Tunai'}
+
+=====================
+💵 *SUBTOTAL: ${formatRupiah(totalHarga)}*
+=====================
+
+👤 *Nama:* ${data.namaPembeli}
+📍 *Alamat:* ${data.alamatPembeli}
+📝 *Catatan:* ${data.catatan || '-'}
+
+Mohon konfirmasinya ya!
+
+🔔 *Catatan Admin:* 
+Tolong konfirmasi & update status pesanan ini lewat menu *Pesanan Masuk* di Dashboard Lokal Shop agar pesanan tercatat diproses sehingga bisa membantu pembukuan toko setiap bulannya. Terima kasih!`;
+
+            // 4. Encode URL agar aman dikirim ke link wa.me
+            const nomorWaAman = String(data.noWhatsapp).replace(/[^0-9]/g, '');
+            const urlWa = `https://wa.me/${nomorWaAman}?text=${encodeURIComponent(pesan)}`;
+            
+            return urlWa;
+        }
+        // ------------------------------------
+
         async function prosesBeliSekarang() {
             const form = document.getElementById('formPesanan');
             if(!form.checkValidity()) { form.reportValidity(); return; }
@@ -577,9 +617,24 @@
                 const { error } = await supabaseClient.from('pesanan').insert([dataPesanan]);
                 if (error) throw error;
 
-                const noWa = dataProdukSistem.toko.no_whatsapp;
-                let pesanWa = `Halo Admin *${dataProdukSistem.toko.nama_toko}*, saya memesan produk:\n\n📦 *${dataProdukSistem.nama_produk}* (x${qty})\n💵 Total: ${formatRp(totalHarga)}\n\n👤 Nama: ${dataPesanan.nama_pembeli}\n📍 Alamat: ${dataPesanan.alamat}\n\n!!! Mohon konfirmasinya di dalam dashboard toko ya - klik pesanan masuk!!! untuk konfirmasi pesanan ke pembeli... terimakasih...`;
-                window.location.href = `https://wa.me/${noWa}?text=${encodeURIComponent(pesanWa)}`;
+                // --- INTEGRASI FUNGSI BARU DI SINI ---
+                const dataWa = {
+                    namaToko: dataProdukSistem.toko.nama_toko,
+                    namaProduk: dataProdukSistem.nama_produk,
+                    hargaProduk: hargaAktif,
+                    qty: qty,
+                    opsiPengiriman: document.getElementById('opsiPengiriman').value,
+                    metodePembayaran: document.getElementById('opsiPembayaran').value,
+                    namaPembeli: dataPesanan.nama_pembeli,
+                    alamatPembeli: dataPesanan.alamat,
+                    catatan: document.getElementById('inputCatatan').value,
+                    noWhatsapp: dataProdukSistem.toko.no_whatsapp
+                };
+
+                const urlWa = buatPesanWhatsApp(dataWa);
+                window.location.href = urlWa;
+                // -------------------------------------
+
             } catch (err) {
                 alert("Gagal memproses pesanan.");
                 if(btn) { btn.innerHTML = "<span>⚡</span> Beli Langsung"; btn.disabled = false; }
